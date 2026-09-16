@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  luajit:
+    name: Static checks and LuaJIT tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install LuaJIT
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luajit
+
+      - name: Static checks
+        run: sh tools/check-globals.sh
+
+      - name: Tests without LOVE
+        run: luajit tests/run_luajit.lua
+
+  love:
+    name: LOVE tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install LOVE and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y love xvfb
+          love --version
+
+      - name: Tests on LOVE
+        run: xvfb-run -a -s "-screen 0 1280x720x24" love tests
+
+      - name: Example self-test
+        run: LUIF_SELFTEST=1 xvfb-run -a -s "-screen 0 1280x720x24" love example
+
+      - name: Example self-test at the adaptive UI scale
+        run: LUIF_SELFTEST=1 LUIF_SCENE=scaled xvfb-run -a -s "-screen 0 1280x720x24" love example
