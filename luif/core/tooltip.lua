@@ -5,7 +5,7 @@
 
 local core = require "luif.core"
 
-local Update            = core.Update
+local Screen            = core.Screen
 local SkinnableItem     = core.SkinnableItem
 local Sounds            = core.Sounds
 
@@ -97,7 +97,7 @@ function ToolTip:update()
         itemHeight = self.relMouseY
     end
 
-    local screenW, screenH = Update.virtualScreenWidth, Update.virtualScreenHeight
+    local screenW, screenH = Screen.width, Screen.height
     local x, y
     local maxX = screenW - width
     local maxY = screenH - height

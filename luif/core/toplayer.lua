@@ -3,7 +3,7 @@
 -- popups (ComboBox) and dragged items (DragManager).
 --
 -- By default the layer is a root covering the virtual screen; it is resized
--- on uiScaleChanged and, like every root, scaled by core/sync.lua. An
+-- when the screen changes and, like every root, scaled by core/sync.lua. An
 -- application can put the layer into its own tree with
 -- TopLayer.setRoot(root), which then also sizes it.
 --
@@ -23,16 +23,16 @@ local function fitScreen(_, virtualWidth, virtualHeight)
 end
 
 local function createLayer()
-    local Update = core.Update
+    local Screen = core.Screen
 
     layer = core.Item {
         id = "TopLayer",
         x = 0, y = 0,
-        width = Update.virtualScreenWidth,
-        height = Update.virtualScreenHeight,
+        width = Screen.width,
+        height = Screen.height,
     }
 
-    Update:on("uiScaleChanged", fitScreen)
+    Screen:on("changed", fitScreen)
 
     if root then
         root:addChild(layer)
@@ -55,7 +55,7 @@ function TopLayer.setRoot(item)
     root = item or false
     if layer then
         layer:setParent(root)
-        fitScreen(nil, core.Update.virtualScreenWidth, core.Update.virtualScreenHeight)
+        fitScreen(nil, core.Screen.width, core.Screen.height)
         if not root and not layer:isAttached() then
             Sync.addRoot(layer)
         end

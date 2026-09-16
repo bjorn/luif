@@ -11,8 +11,9 @@
 --
 --   Update:connect("update", self, "update")
 --
--- Update.onUpdate runs timers, effects and layout, then flushes the node
--- changes of the frame (core/sync.lua).
+-- Update.onUpdate reads the window size (core/screen.lua), runs timers,
+-- effects and layout, then flushes the node changes of the frame
+-- (core/sync.lua).
 --
 -- Another alternative is to use the timeout functions:
 --
@@ -30,6 +31,7 @@ local Class         = core.Class
 local EffectManager = core.EffectManager
 local LayoutManager = core.LayoutManager
 local Object        = core.Object
+local Screen        = core.Screen
 local Sync          = core.Sync
 
 local Host          = core.Host
@@ -43,20 +45,7 @@ local Update = Object {
     -- prevent assertions when looking for inline event handler
     update = false,                 -- function(systemTimeMs, frameDurationMs)
     everySecond = false,            -- function(systemTimeMs)
-
-    uiScale = 1,
-    screenWidth = 1280,
-    screenHeight = 720,
-    virtualScreenWidth = 1280,
-    virtualScreenHeight = 720,
-    uiScaleChanged = false,         -- function(scale, virtualScreenWidth, virtualScreenHeight)
-    adaptUiScale = false,
-    adaptiveWidth = 1920,           -- the adaptive scale fits this virtual size into the window
-    adaptiveHeight = 1080,
 }
-
--- core/sync.lua scales root nodes and core/pointer.lua divides input by this
-Sync.setScaleSource(function() return Update.uiScale end)
 
 --
 -- Calls the given function at the end of the update.
@@ -75,7 +64,7 @@ local function timeoutLessThan(a, b)
 end
 
 function Update.onUpdate(systemTimeMs, frameDurationMs)
-    Update:updateUiScale()
+    Screen:update()
 
     Update._systemTime = systemTimeMs
     Update:emit("update", systemTimeMs, frameDurationMs)
@@ -168,44 +157,6 @@ function Update:clearInterval(timeout)
         timeout.interval = false
     end
     Update:clearTimeout(timeout)
-end
-
-function Update:setAdaptUiScale(adaptUiScale)
-    self.adaptUiScale = adaptUiScale
-    self:updateUiScale(true)
-end
-
--- Turns the adaptive scale off and uses the given fixed scale.
-function Update:setUiScale(scale)
-    self.adaptUiScale = false
-    self.uiScale = scale
-    self:updateUiScale(true)
-end
-
--- The UI scale is applied in one place: core/sync.lua scales every root node
--- by it and core/pointer.lua divides the input feed by it. Everything else
--- works in virtual units, the window size divided by the scale.
-
-function Update:updateUiScale(force)
-    local screenWidth, screenHeight = Host.get().screenSize()
-    if not force and self.screenWidth == screenWidth and self.screenHeight == screenHeight then
-        return
-    end
-
-    local scale = self.uiScale
-
-    if self.adaptUiScale then
-        scale = math.min(screenWidth / self.adaptiveWidth,
-                         screenHeight / self.adaptiveHeight)
-    end
-
-    self.uiScale = scale
-    self.screenWidth = screenWidth
-    self.screenHeight = screenHeight
-    self.virtualScreenWidth = screenWidth / scale
-    self.virtualScreenHeight = screenHeight / scale
-
-    self:emit("uiScaleChanged", scale, self.virtualScreenWidth, self.virtualScreenHeight)
 end
 
 return Update

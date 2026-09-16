@@ -18,8 +18,6 @@
 --   Sync.setHost(host)              host for new roots (nil: the application host)
 --   Sync.host(item)                 host of the item's root, or the default
 --   Sync.node(item)                 the item's node, for tests and tools
---   Sync.uiScale()                  the UI scale root nodes get (Update.uiScale)
---   Sync.setScaleSource(fn)         where uiScale() reads it (core/update.lua sets it)
 --
 -- Items implement:
 --
@@ -48,8 +46,8 @@
 -- core/host.lua). Tests render a tree into a recording host
 -- (host/recording.lua) by setting it before registering the root.
 --
--- UI scale: items are in virtual units. The flush composes Update.uiScale
--- (Sync.uiScale()) into the transform of every root node, so only root nodes
+-- UI scale: items are in virtual units. The flush composes Screen.scale
+-- (core/screen.lua) into the transform of every root node, so only root nodes
 -- carry it; a root's own x, y and scale stay virtual. A changed scale re-pushes
 -- the root transforms in the next flush. core/pointer.lua divides the input
 -- feed by the same scale.
@@ -84,18 +82,7 @@ end
 -- UI scale
 --
 
-local scaleSource = false
 local appliedScale = 1          -- the scale root nodes were pushed with
-
--- core/update.lua registers Update.uiScale as the source when it loads;
--- without a source the scale is 1.
-function Sync.setScaleSource(fn)
-    scaleSource = fn or false
-end
-
-function Sync.uiScale()
-    return scaleSource and scaleSource() or 1
-end
 
 --
 -- Roots
@@ -474,7 +461,7 @@ function Sync.flush()
     if flushing then
         return
     end
-    local scale = Sync.uiScale()
+    local scale = core.Screen.scale
     if scale ~= appliedScale then
         appliedScale = scale
         for i = 1, #roots do

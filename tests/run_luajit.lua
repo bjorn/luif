@@ -111,7 +111,7 @@ end
 
 -- Tests run at a fixed UI scale of 1 (window pixels equal virtual units)
 -- unless they set another one
-require("luif.core.update"):setUiScale(1)
+require("luif.core.screen"):setScale(1)
 
 for _, name in ipairs(files) do
     print(name)

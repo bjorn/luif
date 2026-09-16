@@ -10,6 +10,7 @@ return function(t)
     local core = module "luif.core"
     local AppHost = require "luif.core.host"
     local Update = core.Update
+    local Screen = core.Screen
     local Sync = require "luif.core.sync"
     local Pointer = require "luif.core.pointer"
     local TopLayer = require "luif.core.toplayer"
@@ -21,7 +22,7 @@ return function(t)
         return type(a) == "number" and type(b) == "number" and math.abs(a - b) < 1e-6
     end
 
-    local adapt, savedScale = Update.adaptUiScale, Update.uiScale
+    local adapt, savedScale = Screen.adaptive, Screen.scale
     local host = Recording.new { glyphWidth = 8, lineHeight = 16 }
     Sync.setHost(host)
     local feed = InputFeed.attach()
@@ -48,7 +49,7 @@ return function(t)
     --
     for _, scale in ipairs { 0.5, 1.5 } do
         local at = " at " .. scale
-        Update:setUiScale(scale)
+        Screen:setScale(scale)
 
         local log = {}
         local function record(name)
@@ -132,8 +133,8 @@ return function(t)
     --
     -- Tooltips at 1.5
     --
-    Update:setUiScale(1.5)
-    local vw, vh = Update.virtualScreenWidth, Update.virtualScreenHeight
+    Screen:setScale(1.5)
+    local vw, vh = Screen.width, Screen.height
     local topLeft = core.Item { x = 20, y = 20, width = 60, height = 30, mouseEnabled = true,
                                   toolTip = "Near the top left" }
     local bottomRight = core.Item { x = vw - 30, y = vh - 20, width = 25, height = 15,
@@ -239,7 +240,7 @@ return function(t)
     --
     -- Changing the scale
     --
-    Update:setUiScale(1)
+    Screen:setScale(1)
     local entered = {}
     local left = core.Item { x = 0, y = 0, width = 100, height = 100, mouseEnabled = true,
                                mouseEnter = function() entered[#entered + 1] = "left" end }
@@ -254,10 +255,10 @@ return function(t)
     Sync.flush()
     t.eq(#host.log(), 0, "a flush without changes makes no host calls")
 
-    Update:setUiScale(2)
+    Screen:setScale(2)
     local layer = TopLayer.instance()
-    t.ok(layer.scale == 1 and near(layer.width, Update.virtualScreenWidth)
-             and near(layer.height, Update.virtualScreenHeight),
+    t.ok(layer.scale == 1 and near(layer.width, Screen.width)
+             and near(layer.height, Screen.height),
          "the top layer covers the virtual screen without a scale of its own")
     host.resetLog()
     Sync.flush()
@@ -277,5 +278,5 @@ return function(t)
     step()
     feed.detach()
     Sync.setHost(nil)
-    if adapt then Update:setAdaptUiScale(true) else Update:setUiScale(savedScale) end
+    if adapt then Screen:setAdaptive(true) else Screen:setScale(savedScale) end
 end

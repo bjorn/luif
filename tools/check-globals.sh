@@ -5,7 +5,7 @@
 #     (checked on LuaJIT bytecode, GGET and GSET); luif/core/bit.lua alone may
 #     read the bit library,
 #  2. no host node use outside luif/core/sync.lua but content in pushContent,
-#  3. Update.uiScale read only by the update loop, sync and pointer,
+#  3. Screen.scale read only by the screen, sync and pointer,
 #  4. luif/host/ loads without LOVE.
 # Run from anywhere; exits 1 when a check fails.
 
@@ -64,13 +64,13 @@ if grep -rnE '([hH]ost|\))\.(setImage|setSlices|setText|setFill)\(' example --in
     status=1
 fi
 
-# The UI scale is applied in one place: only luif/core/update.lua, luif/core/sync.lua
-# (root nodes) and luif/core/pointer.lua (input) read Update.uiScale. Comment
-# lines do not count.
-if grep -rnw "uiScale" luif/core example --include=*.lua \
-        | grep -vE '^luif/core/(update|sync|pointer)\.lua:' \
+# The UI scale is applied in one place: only luif/core/screen.lua,
+# luif/core/sync.lua (root nodes) and luif/core/pointer.lua (input) read
+# Screen.scale. Comment lines do not count.
+if grep -rnE "Screen\.scale\b" luif/core example --include=*.lua \
+        | grep -vE '^luif/core/(screen|sync|pointer)\.lua:' \
         | grep -vE '^[^:]+:[0-9]+: *--'; then
-    echo "check-globals: uiScale read outside the update loop, sync and pointer"
+    echo "check-globals: Screen.scale read outside the screen, sync and pointer"
     status=1
 fi
 

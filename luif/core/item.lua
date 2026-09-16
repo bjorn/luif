@@ -744,7 +744,7 @@ end
 
 -- Centres the item on the virtual screen (meant for roots).
 function Item:centerOnScreen()
-    local screenWidth, screenHeight = core.Update.virtualScreenWidth, core.Update.virtualScreenHeight
+    local screenWidth, screenHeight = core.Screen.width, core.Screen.height
     local width, height = self:size()
     self:setPos(math.floor((screenWidth - width) / 2),
                 math.floor((screenHeight - height) / 2))

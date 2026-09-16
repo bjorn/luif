@@ -17,7 +17,7 @@
 --   Pointer.modifierDown(m)   whether "ctrl", "shift", "alt" or "gui" is held
 --
 -- Units: the host feed is in window pixels. The pointer divides it by the UI
--- scale (Sync.uiScale(), the scale core/sync.lua gives root nodes) before
+-- scale (Screen.scale, the scale core/sync.lua gives root nodes) before
 -- picking, so picking, every event coordinate and delta, and position() are
 -- in virtual units, the units items are laid out in. Only the double click
 -- radius is measured in window pixels. A changed scale re-picks hover after
@@ -74,7 +74,9 @@ local pickedGeneration = nil    -- generation of the last hover pick
 local pickedScale = nil         -- UI scale of the last hover pick
 local picks = 0
 
-local uiScale = Sync.uiScale
+local function uiScale()
+    return core.Screen.scale
+end
 
 function Pointer.toVirtual(x, y)
     local scale = uiScale()

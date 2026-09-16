@@ -52,16 +52,17 @@ local root = false
 
 local function createRoot()
     local Update = core.Update
+    local Screen = core.Screen
     if Host.current() then
-        Update:updateUiScale()
+        Screen:update()
     end
     root = core.Item {
         x = 0, y = 0,
-        width = Update.virtualScreenWidth,
-        height = Update.virtualScreenHeight,
+        width = Screen.width,
+        height = Screen.height,
         layout = core.AnchorLayout {},
     }
-    Update:on("uiScaleChanged", function(_, width, height)
+    Screen:on("changed", function(_, width, height)
         root:setSize(width, height)
     end)
     core.Sync.addRoot(root)

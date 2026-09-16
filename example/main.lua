@@ -13,7 +13,7 @@
 --                           screen, "dialog" opens a dialog, "transition"
 --                           starts the page switch just before the capture,
 --                           "scaled" resizes the window to 1000x600 and
---                           toggles the scale like F2 (uiScale 0.52),
+--                           toggles the scale like F2 (scale 0.52),
 --                           "tooltip" hovers Start so its tooltip shows
 --   LUIF_SCREENSHOT=<name>  writes <name>.png to the LOVE save directory
 --                           after 1.5 seconds and quits
@@ -49,7 +49,7 @@ FontDb.configure {
     Large  = { size = 24 },
 }
 
-local Update            = core.Update
+local Screen            = core.Screen
 local TexDb             = core.TexDb
 local FallbackListeners = core.FallbackListeners
 local TopLayer          = core.TopLayer
@@ -493,7 +493,7 @@ local function layoutScreens(width, height)
     end
 end
 
-layoutScreens(Update.virtualScreenWidth, Update.virtualScreenHeight)
+layoutScreens(Screen.width, Screen.height)
 
 Sync.addRoot(uiRoot)
 
@@ -504,7 +504,7 @@ TopLayer.instance():addChild(dialog)
 
 -- Registered after the layer exists, so the layer is resized before the
 -- dialog fits itself to it
-Update:on("uiScaleChanged", function(_, virtualWidth, virtualHeight)
+Screen:on("changed", function(_, virtualWidth, virtualHeight)
     layoutScreens(virtualWidth, virtualHeight)
 end)
 
@@ -514,10 +514,10 @@ end)
 ---------------------------------------------------------------------------
 
 local function toggleUiScale()
-    if Update.adaptUiScale then
-        Update:setUiScale(1)
+    if Screen.adaptive then
+        Screen:setScale(1)
     else
-        Update:setAdaptUiScale(true)
+        Screen:setAdaptive(true)
     end
 end
 

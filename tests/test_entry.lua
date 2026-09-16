@@ -5,7 +5,7 @@
 return function(t)
     local luif = require "luif"
     local Sync = require "luif.core.sync"
-    local Update = require "luif.core.update"
+    local Screen = require "luif.core.screen"
     local Pointer = require "luif.core.pointer"
 
     t.eq(luif.Item, require "luif.core.item", "classes are reachable by name")
@@ -16,13 +16,13 @@ return function(t)
     t.ok(root == luif.root and Sync.isRoot(root), "luif.root is one registered root")
     t.ok(root.layout and root.layout:as(luif.AnchorLayout), "with an AnchorLayout")
     local width, height = root:size()
-    t.ok(width == Update.virtualScreenWidth and height == Update.virtualScreenHeight,
+    t.ok(width == Screen.width and height == Screen.height,
          "covering the virtual screen")
-    Update:setUiScale(2)
+    Screen:setScale(2)
     width, height = root:size()
-    t.ok(width == Update.virtualScreenWidth and height == Update.virtualScreenHeight,
+    t.ok(width == Screen.width and height == Screen.height,
          "and following the UI scale")
-    Update:setUiScale(1)
+    Screen:setScale(1)
 
     if not rawget(luif, "mousepressed") then
         t.skip("the LOVE callbacks need LOVE")

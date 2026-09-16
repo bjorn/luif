@@ -8,7 +8,7 @@ local MouseButton = core.MouseButton
 local DefaultWindowSkin = core.skins.DefaultWindowSkin
 local SkinnableItem   = core.SkinnableItem
 local Text              = core.Text
-local Update            = core.Update
+local Screen            = core.Screen
 
 local TexDb             = core.TexDb
 
@@ -211,8 +211,8 @@ function Window:mouseMove(event)
 
     -- The mouse is not allowed to go off the screen
     local absX, absY = event:absolutePos()
-    local dx = clamp(absX, 0, Update.virtualScreenWidth) - self._startMouseX
-    local dy = clamp(absY, 0, Update.virtualScreenHeight) - self._startMouseY
+    local dx = clamp(absX, 0, Screen.width) - self._startMouseX
+    local dy = clamp(absY, 0, Screen.height) - self._startMouseY
 
     if self._resizing then
         -- Depending on where the resize handle is anchored, it affects

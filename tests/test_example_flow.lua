@@ -6,6 +6,7 @@ return function(t)
     local module = require "luif.module"
     local core = module "luif.core"
     local Update = core.Update
+    local Screen = core.Screen
     local Pointer = require "luif.core.pointer"
     local Sync = require "luif.core.sync"
     local InputFeed = require "tests.inputfeed"
@@ -21,8 +22,8 @@ return function(t)
     end
 
     -- Keep the UI scale fixed so window pixels equal item units
-    local adapt, savedScale = Update.adaptUiScale, Update.uiScale
-    Update:setUiScale(1)
+    local adapt, savedScale = Screen.adaptive, Screen.scale
+    Screen:setScale(1)
 
     -- A skin without textures: a rectangle and a label
     local FlatSkin = core.Skin:extend { width = 80, height = 30 }
@@ -149,5 +150,5 @@ return function(t)
     root:delete()
     step()
     feed.detach()
-    if adapt then Update:setAdaptUiScale(true) else Update:setUiScale(savedScale) end
+    if adapt then Screen:setAdaptive(true) else Screen:setScale(savedScale) end
 end

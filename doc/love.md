@@ -24,8 +24,8 @@ From the repository root:
 
 Keys: Return enters the demo, Escape goes back to the title screen or, on the
 title screen, asks to quit, and F2 toggles between 1:1 pixels (the default)
-and the adaptive UI scale (`Update:setAdaptUiScale(true)`, which fits a
-virtual screen of `Update.adaptiveWidth` by `adaptiveHeight` into the
+and the adaptive UI scale (`Screen:setAdaptive(true)`, which fits a
+virtual screen of `Screen.adaptiveWidth` by `adaptiveHeight` into the
 window). The keys are handled by a bottom fallback listener, so an open
 dialog or a focused text field gets them first.
 

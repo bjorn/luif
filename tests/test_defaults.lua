@@ -9,6 +9,7 @@ return function(t)
     local module = require "luif.module"
     local core = module "luif.core"
     local Update = core.Update
+    local Screen = core.Screen
     local Host = require "luif.core.host"
     local Sync = require "luif.core.sync"
     local Pointer = require "luif.core.pointer"
@@ -23,8 +24,8 @@ return function(t)
         end
     end
 
-    local adapt, savedScale = Update.adaptUiScale, Update.uiScale
-    Update:setUiScale(1)
+    local adapt, savedScale = Screen.adaptive, Screen.scale
+    Screen:setScale(1)
     local feed = InputFeed.attach()
 
     local root = core.Item { x = 0, y = 0, width = 800, height = 600 }
@@ -168,5 +169,5 @@ return function(t)
     local stepped, stepError = pcall(step, 3)
     t.ok(stepped, "deleting a scrolling ScrollArea stops its animation: " .. tostring(stepError))
     feed.detach()
-    if adapt then Update:setAdaptUiScale(true) else Update:setUiScale(savedScale) end
+    if adapt then Screen:setAdaptive(true) else Screen:setScale(savedScale) end
 end

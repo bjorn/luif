@@ -21,7 +21,7 @@
 --   Units       positions and sizes are in the parent node's units. Top level
 --               nodes are in window pixels, and so are input positions and
 --               screenSize(). A UI scale is a scale on a root node
---               (core/sync.lua applies Update.uiScale there).
+--               (core/sync.lua applies Screen.scale there).
 --   Axes        origin top left, y down, rotations in radians, clockwise on
 --               screen.
 --   Colours     packed 0xAARRGGBB numbers. Negative int32 values are accepted

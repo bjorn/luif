@@ -36,7 +36,7 @@ Platform specific hosts live with their platform code, like
 * Nodes, textures and fonts are opaque handles with stable identity.
 * Positions and sizes are in the parent node's units. Top level nodes, input
   positions and `screenSize()` are in window pixels; a UI scale is a scale on
-  a root node (`luif/core/sync.lua` puts `Update.uiScale` there).
+  a root node (`luif/core/sync.lua` puts `Screen.scale` there).
 * Origin top left, y down, rotations in radians, clockwise on screen.
 * Colours are packed `0xAARRGGBB` numbers; negative int32 values mean the
   same bits; the alpha byte is honoured.
@@ -155,9 +155,9 @@ module of `luif/core/` by name, loaded on first use (`luif.Button`,
 
 | name | meaning |
 |---|---|
-| `luif.root` | an item covering the virtual screen with an `AnchorLayout`: a root created on first use and resized on `uiScaleChanged` |
+| `luif.root` | an item covering the virtual screen with an `AnchorLayout`: a root created on first use and resized when the screen changes |
 | `luif.setHost(host)` | core's host and the pointer's input source |
-| `luif.update(dt)` | `Update.onUpdate(host.time(), dt * 1000)`, then `Pointer.afterUpdate()` |
+| `luif.update(dt)` | `Update.onUpdate(host.time(), dt * 1000)` (which starts with `Screen:update()`), then `Pointer.afterUpdate()` |
 
 Under LOVE, `luif/init.lua` makes the LOVE host core's host and adds the
 functions of `luif/love/init.lua`:
@@ -216,21 +216,23 @@ Ground rules:
 5. Handles (nodes, textures, fonts) are plain Lua tables with stable
    identity. The framework uses them as table keys and compares them with `==`.
 6. Units: items are laid out in virtual units, the window size divided by
-   `Update.uiScale` (`Update.virtualScreenWidth/Height`). The scale is
-   applied in one place per direction: `luif/core/sync.lua` composes it into the
-   transform of every root node (a root's own `x, y` and `scale` stay
-   virtual; child nodes never carry it), and `luif/core/pointer.lua` divides the
-   window pixels of the input feed by it before picking. So event positions
-   and deltas, `absolutePos` and `core.Pointer.position()` are virtual;
-   `Pointer.toWindow` and `Pointer.toVirtual` convert. Only the host's
-   `screenSize` and `pointerPosition` and the double click radius are in
-   window pixels. `Update:setUiScale(s)` sets a fixed scale,
-   `Update:setAdaptUiScale(true)` the adaptive one, which fits
-   `Update.adaptiveWidth` by `adaptiveHeight` (1920 by 1080) into the
-   window; only `luif/core/update.lua`,
-   `luif/core/sync.lua` and `luif/core/pointer.lua` read `Update.uiScale`
-   (`tools/check-globals.sh`), and `luif/core/update.lua` hands it to
-   `luif/core/sync.lua` with `Sync.setScaleSource`.
+   the UI scale. `luif/core/screen.lua` holds both: `Screen.width` and
+   `Screen.height` (virtual), `Screen.scale`, and the window size in
+   `Screen.windowWidth/Height`. `Update.onUpdate` calls `Screen:update()`
+   every frame, which reads the host's `screenSize` and emits `changed`
+   (`scale, width, height`) when something changed. `Screen:setScale(s)` sets
+   a fixed scale, `Screen:setAdaptive(true)` the adaptive one, which fits
+   `Screen.adaptiveWidth` by `adaptiveHeight` (1920 by 1080) into the window.
+   The scale is applied in one place per direction: `luif/core/sync.lua`
+   composes it into the transform of every root node (a root's own `x, y`
+   and `scale` stay virtual; child nodes never carry it), and
+   `luif/core/pointer.lua` divides the window pixels of the input feed by it
+   before picking. So event positions and deltas, `absolutePos` and
+   `core.Pointer.position()` are virtual; `Pointer.toWindow` and
+   `Pointer.toVirtual` convert. Only the host's `screenSize` and
+   `pointerPosition` and the double click radius are in window pixels. Only
+   the screen, the sync module and the pointer read `Screen.scale`
+   (`tools/check-globals.sh`).
 7. Origin is top left, y grows downwards, rotations are in radians (items
    keep degrees and `luif/core/sync.lua` converts), clockwise on screen.
 8. Text: `luif/core/text.lua` substitutes `{1}`, `{1:U}`, `{1:p}`, `{1:d.2}`,
@@ -421,7 +423,7 @@ Delivery rules:
 
 Tooltips (`luif/core/tooltip.lua`) are roots placed and sized in virtual units:
 next to the pointer (or `relX/relY` from the item's `absolutePos`) and
-kept within `Update.virtualScreenWidth/Height`; they have no scale of their
+kept within `Screen.width` and `Screen.height`; they have no scale of their
 own; `Item:createToolTip` registers them with `Sync.addRoot`.
-`luif/core/toplayer.lua` is a root sized to the virtual screen on
-`uiScaleChanged`.
+`luif/core/toplayer.lua` is a root sized to the virtual screen whenever the
+screen changes.

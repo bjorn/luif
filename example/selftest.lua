@@ -9,7 +9,7 @@
 local core = require "luif.core"
 
 local Pointer = core.Pointer
-local Update = core.Update
+local Screen = core.Screen
 
 local feed = Pointer.sink
 
@@ -77,11 +77,11 @@ return function(ctx)
 
         if ctx.scaled then
             local width, height = love.graphics.getDimensions()
-            check(width == 1000 and height == 600 and Update.adaptUiScale,
+            check(width == 1000 and height == 600 and Screen.adaptive,
                   "the window is 1000x600 with the adaptive scale")
-            check(math.abs(Update.virtualScreenWidth - 1920) < 1e-6,
+            check(math.abs(Screen.width - 1920) < 1e-6,
                   "the virtual screen is 1920 wide")
-            check(root.width == Update.virtualScreenWidth and root.scale == 1,
+            check(root.width == Screen.width and root.scale == 1,
                   "the root covers the virtual screen without a scale of its own")
         end
 
@@ -111,8 +111,8 @@ return function(ctx)
                   and math.abs(tip.y - (my + 25)) < 1e-6,
               "Start's tooltip is placed below the pointer in virtual units")
         check(tip and tip.x >= 0 and tip.y >= 0
-                  and tip.x + tipWidth <= Update.virtualScreenWidth
-                  and tip.y + tipHeight <= Update.virtualScreenHeight,
+                  and tip.x + tipWidth <= Screen.width
+                  and tip.y + tipHeight <= Screen.height,
               "the tooltip is on the screen")
         moveTo(8, 8)
         wait(300)
@@ -121,8 +121,8 @@ return function(ctx)
         wait(400)
         check(dialogTitle() == "Reset", "Reset opens a dialog")
         local layer = dialog.parent
-        check(layer and dialog.width == Update.virtualScreenWidth
-                  and layer.width == Update.virtualScreenWidth,
+        check(layer and dialog.width == Screen.width
+                  and layer.width == Screen.width,
               "the dialog covers the virtual screen")
         click(start)
         check(ctx.counter.text == "Clicks: 1", "the dialog blocks clicks underneath")

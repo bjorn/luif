@@ -108,7 +108,8 @@ return function(t)
     -- The loaded core builds the same host scene as the required one
     local function build(core, into)
         local Update = core.Update
-        Update:setUiScale(1)
+        local Screen = core.Screen
+        Screen:setScale(1)
         local panel = core.Item {
             x = 10, y = 20, width = 200, height = 100,
             core.Rectangle { width = 200, height = 100, color = core.Color.rgb(40, 50, 60),
