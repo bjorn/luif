@@ -4,6 +4,9 @@
 
 local core = require "luif.core"
 
+-- Lua 5.1 and LuaJIT have unpack, later versions table.unpack
+local unpack = unpack or table.unpack
+
 local min, ceil, floor = math.min, math.ceil, math.floor
 
 -- The target's content children as a list starting at 1

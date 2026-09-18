@@ -11,6 +11,9 @@
 
 local core = require "luif.core"
 
+-- math.atan takes two arguments since Lua 5.3, which dropped math.atan2
+local atan2 = math.atan2 or math.atan
+
 local Item = core.Item
 local Image = core.Image
 local Pointer = core.Pointer
@@ -60,7 +63,7 @@ local function geometry(self)
     local dx = endX - startX
     local dy = endY - startY
     local length = math.sqrt(dx*dx + dy*dy)
-    local angle = math.atan2(dy, dx)
+    local angle = atan2(dy, dx)
 
     local totalOffset = self.endOffset + self.startOffset
     if totalOffset ~= 0 then
@@ -237,7 +240,7 @@ end
 function Line:angle()
     local dx = self.endX - self.startX
     local dy = self.endY - self.startY
-    return math.deg(math.atan2(dy, dx))
+    return math.deg(atan2(dy, dx))
 end
 
 function Line:distanceTo(x, y)

@@ -350,7 +350,7 @@ local scrollPanel = panel("Clipping and scrolling", 648, 408, 600, 288, {
     core.ScrollArea {
         skinClass = skins.ScrollAreaSkin,
         x = 20, y = 52, width = 280, height = 216,
-        content = core.Column { gap = 2, unpack(rows) },
+        content = core.Column { gap = 2, (unpack or table.unpack)(rows) },
     },
     rowStatus,
     text("The list is clipped by the node clip flag, and rows scrolled out of "

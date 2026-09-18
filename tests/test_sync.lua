@@ -536,7 +536,7 @@ return function(t)
         -- DefaultScrollAreaSkin
         local rows = {}
         for i = 1, 3 do rows[i] = core.Item { width = 50, height = 20 } end
-        local scroll = core.ScrollArea { width = 120, height = 100, content = core.Column { unpack(rows) } }
+        local scroll = core.ScrollArea { width = 120, height = 100, content = core.Column { (unpack or table.unpack)(rows) } }
         build("ScrollArea", scroll, root)
         local skin = scroll.skin
         t.ok(childNodes(skin, { scroll.contentArea, scroll.trackbar, scroll.upButton, scroll.downButton }),

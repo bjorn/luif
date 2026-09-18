@@ -149,7 +149,7 @@ return function(t)
         rows[i] = core.Item { width = 80, height = 30 }
     end
     local scroll = core.ScrollArea { x = 300, y = 100, width = 120, height = 150,
-                                     content = core.Column { unpack(rows) } }
+                                     content = core.Column { (unpack or table.unpack)(rows) } }
     root:addChild(scroll)
     step(3)
     local downPresses = 0

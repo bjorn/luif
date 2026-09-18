@@ -12,7 +12,8 @@ From the repository root:
   its `main.lua` puts the repository root on `package.path`).
 * `love tests` runs every `tests/test_*.lua` and exits with status 0 when all
   checks pass.
-* `luajit tests/run_luajit.lua` runs the same test files without LOVE, with a
+* `luajit tests/run_luajit.lua` (or `lua5.4`; core runs on Lua 5.1 to 5.4 and
+  LuaJIT) runs the same test files without LOVE, with a
   recording host as core's host that reads files and PNG sizes from disk;
   tests of LOVE only code (drawing, the love callbacks, LOVE font metrics)
   report skips.

@@ -11,6 +11,9 @@
 
 local core = require "luif.core"
 
+-- Lua 5.1 and LuaJIT have unpack, later versions table.unpack
+local unpack = unpack or table.unpack
+
 local Class     = core.Class
 local Color     = core.Color
 local Localization = core.Localization

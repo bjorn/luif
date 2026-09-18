@@ -11,16 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install LuaJIT
+      - name: Install LuaJIT and Lua 5.4
         run: |
           sudo apt-get update
-          sudo apt-get install -y luajit
+          sudo apt-get install -y luajit lua5.4
 
       - name: Static checks
         run: sh tools/check-globals.sh
 
       - name: Tests without LOVE
         run: luajit tests/run_luajit.lua
+
+      - name: Tests on Lua 5.4
+        run: lua5.4 tests/run_luajit.lua
 
   love:
     name: LOVE tests
