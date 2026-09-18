@@ -18,6 +18,7 @@
 --
 --   Handles     nodes, textures and fonts are opaque host values with stable
 --               identity; the framework may use them as table keys.
+--   Numbers     a host may keep node properties in single precision.
 --   Units       positions and sizes are in the parent node's units. Top level
 --               nodes are in window pixels, and so are input positions and
 --               screenSize(). A UI scale is a scale on a root node
@@ -162,9 +163,10 @@ Interface.groups = {
             { name = "wrapText", required = true, params = "(font, text, width)",
               returns = "widest, lines",
               doc = "Word wraps text at width; returns the widest line's width and the lines." },
-            { name = "setTextureFilter", required = false, params = "(min, mag)",
+            { name = "setTextureFilter", required = false, params = "(min, mag, texture)",
               capability = "textureFilter",
-              doc = "\"linear\" or \"nearest\" for every texture." },
+              doc = "\"linear\" or \"nearest\" for every texture, or for one texture (and "
+                 .. "the regions that share its image) when given." },
         },
     },
     {
