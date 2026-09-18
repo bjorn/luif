@@ -395,12 +395,21 @@ Fonts::Fonts(SDL_Renderer *renderer, const SdlHostOptions &options, const Files 
     d->fonts.emplace_back();
 }
 
-Fonts::~Fonts()
+void Fonts::clear()
 {
     for (Face &face : d->faces)
         TTF_CloseFont(face.ttf);
     for (Page &page : d->pages)
         SDL_DestroyTexture(page.texture);
+    d->faces.clear();
+    d->pages.clear();
+    d->fonts.resize(1);         // [0] is none
+    d->open = -1;
+}
+
+Fonts::~Fonts()
+{
+    clear();
     if (d->ttfInit)
         TTF_Quit();
     delete d;

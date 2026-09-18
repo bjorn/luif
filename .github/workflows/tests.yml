@@ -73,6 +73,9 @@ jobs:
       - name: Embedding example
         run: build/luif-embed .
 
+      - name: Live reload
+        run: build/luif-sdl --inspect --watch tests/reload "$(mktemp -d)"
+
       - name: Example self-test
         run: LUIF_SELFTEST=1 build/luif-sdl example
 

@@ -29,12 +29,20 @@ build/luif-sdl example
 default prefers LuaJIT when pkg-config finds it. CMake prints which one it
 uses.
 
-`luif-sdl [--inspect] <directory> [arguments]` puts the directory on
+`luif-sdl [--inspect] [--watch] <directory> [arguments]` puts the directory on
 `package.path`, makes it the base of relative texture, font and file paths,
 and runs its `main.lua`. `example/` runs unchanged under LOVE and `luif-sdl`;
 `example/platform.lua` hides the differences between the two. The default
 font is Bitstream Vera Sans, embedded in the application, which is also
 LOVE's default, so both render alike.
+
+F5 reloads: `main.lua` runs again with every Lua module and image loaded
+afresh, in the same Lua state, so globals are a place to keep what should
+survive. `--watch` does the same whenever a Lua, image or font file in the
+directory changes (polled four times per second, once the files have been
+quiet for 0.3 seconds; `app.watch(directory)` adds directories, which the
+example uses for `luif/` itself). With `--watch` a script error is shown in
+the window until the next change, instead of ending the run.
 
 Headless runs need no display: with `SDL_VIDEODRIVER=dummy` and
 `SDL_RENDER_DRIVER=software` the application renders into memory and does
@@ -43,6 +51,7 @@ not pace its frames.
 ```sh
 export SDL_VIDEODRIVER=dummy SDL_RENDER_DRIVER=software
 build/luif-sdl --inspect tests              # the whole test suite on this host
+build/luif-sdl --inspect --watch tests/reload "$(mktemp -d)"   # live reload
 LUIF_SELFTEST=1 build/luif-sdl example      # the example's self-test
 LUIF_SCENE=demo LUIF_SCREENSHOT=demo build/luif-sdl example
 ```
@@ -72,6 +81,8 @@ app.screenshot(path)            -- saves the next frame as a PNG
 app.capture()                   -- draws a frame now, for app.pixel
 app.pixel(x, y)                 -- the packed colour of a captured pixel
 app.setFrameTime(seconds)       -- a fixed dt, to record frames
+app.reload()                    -- runs main.lua again after this frame, like F5
+app.watch(directory)            -- with --watch: changes there reload too
 app.update = function(dt) end   -- called before the UI updates
 ```
 
@@ -139,6 +150,13 @@ Options and calls beyond the basics:
   field has the focus, with the field's area for on-screen keyboards and
   input methods, and stops it afterwards, so game keys never go through an
   input method. `textInput = false` leaves text input to the application.
+* **Live reload.** `reload()` forgets the scene, the textures and fonts (so
+  images are read again) and every Lua module loaded since the host was
+  constructed; the application then runs its UI scripts again, in the same
+  Lua state. Modules the game loaded before constructing the host stay, and
+  so do globals. Handles of `addTexture` have to be added again. When to
+  reload (a key, a file watcher) is the application's choice;
+  `sdl/app/main.cpp` does both.
 * **The pointer.** `pointerOverUi()` tells whether the pointer is over an
   item that takes mouse input, to suppress hover effects in the world.
 * **Sizes.** `screenSize`, input and drawing share the renderer's coordinates:

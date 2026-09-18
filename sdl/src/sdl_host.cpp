@@ -70,6 +70,17 @@ SdlHost::Impl::Impl(lua_State *L, SDL_Window *window, SDL_Renderer *renderer,
     textures.files = &files;
     batch.renderer = renderer;
     registerLuaApi(*this);
+
+    // What is loaded now is the application's; reload forgets the rest
+    lua_newtable(L);
+    lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
+    for (lua_pushnil(L); lua_next(L, -2); lua_pop(L, 1)) {
+        lua_pushvalue(L, -2);
+        lua_pushboolean(L, true);
+        lua_rawset(L, -6);
+    }
+    lua_pop(L, 1);
+    loadedRef = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
 // The Lua state has to be open still
@@ -81,6 +92,7 @@ SdlHost::Impl::~Impl()
         *box = nullptr;
     lua_pop(L, 1);
     luaL_unref(L, LUA_REGISTRYINDEX, boxRef);
+    luaL_unref(L, LUA_REGISTRYINDEX, loadedRef);
     luaL_unref(L, LUA_REGISTRYINDEX, sinkRef);
     luaL_unref(L, LUA_REGISTRYINDEX, updateRef);
     lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
@@ -94,6 +106,42 @@ SdlHost::Impl::~Impl()
         SDL_DestroyCursor(cursor);      // null is fine
     if (textInput)
         SDL_StopTextInput(window);
+}
+
+// Back to the state right after construction: an empty scene, no textures or
+// fonts (so that images load again), and no Lua module loaded since then
+void reloadHost(SdlHost::Impl &host)
+{
+    lua_State *L = host.L;
+    lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
+    lua_rawgeti(L, LUA_REGISTRYINDEX, host.loadedRef);
+    for (lua_pushnil(L); lua_next(L, -3); lua_pop(L, 1)) {
+        lua_pushvalue(L, -2);
+        lua_rawget(L, -4);
+        const bool keep = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+        if (!keep) {                // clearing a field while traversing is allowed
+            lua_pushvalue(L, -2);
+            lua_pushnil(L);
+            lua_rawset(L, -6);
+        }
+    }
+    lua_pop(L, 2);
+
+    luaL_unref(L, LUA_REGISTRYINDEX, host.sinkRef);
+    luaL_unref(L, LUA_REGISTRYINDEX, host.updateRef);
+    host.sinkRef = host.updateRef = LUA_NOREF;
+    host.scene = Scene();
+    host.textures.clear();
+    host.fonts.clear();
+    host.pressedButtons = 0;
+    host.pointerOverUi = host.inputError = false;
+    host.error.clear();
+    setCursor(host, nullptr);
+    if (host.textInput)
+        SDL_StopTextInput(host.window);
+    host.textInput = false;
+    lua_gc(L, LUA_GCCOLLECT, 0);    // the old modules and what they held
 }
 
 SdlHost::SdlHost(lua_State *L, SDL_Window *window, SDL_Renderer *renderer,
@@ -147,6 +195,11 @@ bool SdlHost::update(double seconds)
 void SdlHost::render()
 {
     renderScene(*d);
+}
+
+void SdlHost::reload()
+{
+    reloadHost(*d);
 }
 
 bool SdlHost::pointerOverUi() const

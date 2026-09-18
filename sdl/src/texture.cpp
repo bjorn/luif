@@ -81,6 +81,11 @@ SDL_Texture *makeGray(SDL_Renderer *renderer, SDL_Texture *texture, SDL_ScaleMod
 
 Textures::~Textures()
 {
+    clear();
+}
+
+void Textures::clear()
+{
     for (Texture &entry : items) {
         if (entry.source != None)
             continue;           // regions borrow
@@ -89,6 +94,9 @@ Textures::~Textures()
         if (entry.sdl && !entry.external)
             SDL_DestroyTexture(entry.sdl);
     }
+    items.assign(1, Texture());
+    byPath.clear();
+    filter = SDL_SCALEMODE_LINEAR;
 }
 
 Id Textures::load(const std::string &path)

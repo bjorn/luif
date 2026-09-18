@@ -109,6 +109,9 @@ else
     -- What conf.lua does under LOVE
     app.setTitle("Luif on SDL3")
 
+    -- With luif-sdl --watch, changes to the framework reload the example too
+    app.watch(app.source .. "/../luif")
+
     platform.quit = app.quit
     platform.setBackgroundColor = app.setBackgroundColor
     platform.setWindowSize = app.setWindowSize

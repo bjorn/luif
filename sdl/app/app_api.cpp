@@ -61,6 +61,24 @@ int screenshot(lua_State *L)
     return 0;
 }
 
+int reload(lua_State *L)
+{
+    self(L).reload = true;
+    return 0;
+}
+
+int watch(lua_State *L)
+{
+    App &app = self(L);
+    std::string directory = luaL_checkstring(L, 1);
+    bool known = false;
+    for (const std::string &watched : app.watched)
+        known = known || watched == directory;
+    if (!known)
+        app.watched.push_back(directory);
+    return 0;
+}
+
 int textInputActive(lua_State *L)
 {
     lua_pushboolean(L, SDL_TextInputActive(self(L).window));
@@ -104,6 +122,8 @@ const luaL_Reg functions[] = {
     { "windowSize", windowSize },
     { "setBackgroundColor", setBackgroundColor },
     { "screenshot", screenshot },
+    { "reload", reload },
+    { "watch", watch },
     { "textInputActive", textInputActive },
     { "capture", capture },
     { "pixel", pixel },
@@ -164,7 +184,7 @@ void appRegister(lua_State *L, App &app)
     lua_pop(L, 2);
 }
 
-bool appUpdate(lua_State *L, App &app, double dt)
+bool appUpdate(lua_State *L, App &app, double dt, std::string *message)
 {
     lua_pushlightuserdata(L, &app);
     lua_rawget(L, LUA_REGISTRYINDEX);
@@ -179,7 +199,7 @@ bool appUpdate(lua_State *L, App &app, double dt)
         return true;
     }
     lua_pushnumber(L, dt);
-    return appCall(L, 1, 0);
+    return appCall(L, 1, 0, message);
 }
 
 void appDraw(App &app)
@@ -211,15 +231,29 @@ void appSaveScreenshot(App &app)
     SDL_DestroySurface(surface);
 }
 
-bool appCall(lua_State *L, int arguments, int results)
+void appReset(lua_State *L, App &app)
+{
+    lua_pushlightuserdata(L, &app);
+    lua_pushnil(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+    app.background = 0xFF000000;
+    app.frameTime = 0;
+    app.screenshot.clear();
+    app.reload = false;
+}
+
+bool appCall(lua_State *L, int arguments, int results, std::string *message)
 {
     int handler = lua_gettop(L) - arguments;
     lua_pushcfunction(L, traceback);
     lua_insert(L, handler);
     bool ok = lua_pcall(L, arguments, results, handler) == 0;
     if (!ok) {
-        const char *message = lua_tostring(L, -1);
-        fprintf(stderr, "%s\n", message ? message : "(the error is not a string)");
+        const char *text = lua_tostring(L, -1);
+        text = text ? text : "(the error is not a string)";
+        fprintf(stderr, "%s\n", text);
+        if (message)
+            *message = text;
         lua_pop(L, 1);
     }
     lua_remove(L, handler);

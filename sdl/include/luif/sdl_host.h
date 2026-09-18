@@ -104,6 +104,13 @@ public:
     // unspecified.
     void render();
 
+    // Live reload, in the same Lua state: forgets the scene, the textures
+    // and fonts (so that images are read again) and every Lua module loaded
+    // since the host was constructed. The application then runs its UI
+    // scripts again. Globals stay, handles of addTexture do not. Not from
+    // inside a Lua callback that the host is running.
+    void reload();
+
     // Whether the pointer is over an item that takes mouse input, as of the
     // last motion event: the game can leave its world unhovered then.
     bool pointerOverUi() const;

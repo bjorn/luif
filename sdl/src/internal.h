@@ -167,6 +167,7 @@ struct Textures {
 
     // load and create return None on failure, and SDL_GetError() says why
     ~Textures();
+    void clear();                   // releases every texture; handles become invalid
     Id load(const std::string &path);                           // cached per path
     Id create(int width, int height, const uint32_t *argb);     // pixels as 0xAARRGGBB
     Id region(Id texture, float x, float y, float width, float height);
@@ -220,6 +221,7 @@ struct Fonts {
     ~Fonts();
 
     // Equal specs give the same id. None on failure, and SDL_GetError() says why.
+    void clear();                   // releases every font, face and atlas page
     Id load(const FontSpec &spec);
     size_t count() const;           // ids are 1 to count() - 1
     float lineHeight(Id font) const;
@@ -251,6 +253,7 @@ struct SdlHost::Impl {
     Batch batch;
 
     int boxRef = LUA_NOREF;         // the userdata through which the host functions find the host
+    int loadedRef = LUA_NOREF;      // the names in package.loaded when the host was made
     int sinkRef = LUA_NOREF;        // the input sink table
     int updateRef = LUA_NOREF;      // require(module).update
     uint32_t pressedButtons = 0;    // bit per button a pointerPressed was delivered for
@@ -270,6 +273,7 @@ struct SdlHost::Impl {
 // has yet to report) and nothing is left on the stack.
 bool protectedCall(SdlHost::Impl &host, int nargs, int nresults);  // sdl_host.cpp
 void registerLuaApi(SdlHost::Impl &host);                   // lua_api.cpp
+void reloadHost(SdlHost::Impl &host);                       // sdl_host.cpp
 bool feedEvent(SdlHost::Impl &host, const SDL_Event &event);    // input.cpp
 void setCursor(SdlHost::Impl &host, const char *name);      // input.cpp
 bool isKeyDown(const char *name);                           // input.cpp, LOVE key names

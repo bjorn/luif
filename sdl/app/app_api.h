@@ -27,6 +27,11 @@
 //   app.pixel(x, y)                 the packed colour of a captured pixel
 //   app.setFrameTime(seconds)       a fixed dt for every update, to record
 //                                   frames; nil returns to real time
+//   app.reload()                    runs main.lua again after this frame, with
+//                                   all Lua modules and images loaded afresh
+//                                   (F5 does the same)
+//   app.watch(directory)            with --watch: changes in this directory
+//                                   reload too, not just those in app.source
 //   app.update = function(dt) end   optional, called before the UI updates
 //
 #pragma once
@@ -52,6 +57,8 @@ struct App {
     double frameTime = 0;           // seconds; 0 for real time
     std::string screenshot;         // where the next frame goes, when set
     SDL_Surface *capture = nullptr; // the frame app.capture drew, for app.pixel
+    bool reload = false;            // run main.lua again after this frame
+    std::vector<std::string> watched;   // directories that --watch looks at
 };
 
 // Clears to the background colour and draws the UI
@@ -62,11 +69,16 @@ void appRegister(lua_State *L, App &app);
 
 // Calls app.update(dt) when the script set one. Returns false when it raised
 // an error (see appCall).
-bool appUpdate(lua_State *L, App &app, double dt);
+bool appUpdate(lua_State *L, App &app, double dt, std::string *message = nullptr);
 
 // Saves the frame that was just rendered when a screenshot is pending. Goes
 // between the last drawing and SDL_RenderPresent.
 void appSaveScreenshot(App &app);
 
-// lua_pcall that prints the error with a traceback to stderr and returns false
-bool appCall(lua_State *L, int arguments, int results);
+// Forgets what the script set (app.update, the background, the frame time),
+// for a reload
+void appReset(lua_State *L, App &app);
+
+// lua_pcall that prints the error with a traceback to stderr, keeps it in
+// *message when given, and returns false
+bool appCall(lua_State *L, int arguments, int results, std::string *message = nullptr);
