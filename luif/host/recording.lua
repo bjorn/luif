@@ -69,7 +69,12 @@ local function num(value)
     return format("%.10g", value)
 end
 
+-- Textures and fonts of another host (core's TexDb and FontDb use the
+-- application's) are opaque
 local function textureName(tex)
+    if type(tex) ~= "table" then
+        return tostring(tex)
+    end
     if tex.region then
         return format("%s@%s,%s+%sx%s", tex.name, num(tex.x), num(tex.y),
                       num(tex.width), num(tex.height))
@@ -109,9 +114,10 @@ local function describeContent(content)
                       num(content.bottom), content.tint, content.grayscale and " grayscale" or "")
     elseif kind == "text" then
         local runs = type(content.text) == "table" and " runs" or ""
-        return format("text=%q%s font=%s:%s color=%08X align=%s%s",
-                      Interface.plainText(content.text), runs, content.font.name,
-                      num(content.font.size), content.color, content.align,
+        local font = content.font
+        font = type(font) == "table" and font.name .. ":" .. num(font.size) or tostring(font)
+        return format("text=%q%s font=%s color=%08X align=%s%s",
+                      Interface.plainText(content.text), runs, font, content.color, content.align,
                       content.wrap and " wrap" or "")
     end
     local fill = content.color and format("fill=%08X", content.color) or "fill=none"
@@ -369,7 +375,7 @@ function Recording.new(options)
         return widest, lines
     end
 
-    function impl.setTextureFilter(min, mag)
+    function impl.setTextureFilter(min, mag, texture)
     end
 
     --

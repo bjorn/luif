@@ -136,8 +136,11 @@ return function(t)
     Sync.setHost(nil)
     t.ok(ok, "the same tree builds in the required core: " .. tostring(err))
     if loadedDump and requiredDump then
-        local function names(dump) return (dump:gsub("node#%d+", "node")) end
-        -- Textures and fonts come from different hosts; their names and sizes match
+        -- Textures and fonts come from different hosts, and handles are opaque
+        local function names(dump)
+            return (dump:gsub("node#%d+", "node"):gsub("font=%S+", "font"):gsub("image=%S+", "image")
+                        :gsub("slices=%S+", "slices"))
+        end
         t.eq(names(loadedDump), names(requiredDump), "both cores build the same scene")
         t.ok(loadedDump:find("text=\"Hello world\" runs", 1, true) ~= nil, "with colour runs")
     end

@@ -1,103 +1,58 @@
 --
--- Test runner: `love tests` (headless friendly, run under xvfb when there
--- is no display). Runs every tests/test_*.lua in sorted order. Each file
--- returns a function(t) that reports through t.ok, t.eq, t.near, t.raises
--- and t.skip. Exits with status 0 when every check passed, 1 otherwise.
+-- Test runner for the hosts that run a directory: `love tests` and
+-- `luif-sdl --inspect tests` (both headless friendly: LOVE under xvfb, the
+-- SDL runner with SDL_VIDEODRIVER=dummy). Runs every tests/test_*.lua in
+-- sorted order with the host of the platform as core's host. Each file
+-- returns a function(t) that reports through the API of tests/harness.lua.
+-- Exits with status 0 when every check passed, 1 otherwise.
 --
 
 io.stdout:setvbuf("no")
 
-local root = love.filesystem.getSource() .. "/.."
+local app = not love and require "app"
+local source = love and love.filesystem.getSource() or app.source
+local root = source .. "/.."
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 
 package.loaded["tests.root"] = root
 
--- Required under LOVE, Luif makes the LOVE host its host
+-- Required here, Luif makes the host of the platform its host
 require "luif"
 
-local passed, failed, skipped = 0, 0, 0
+local Harness = require "tests.harness"
 
-local function report(ok, label, detail)
-    if ok then
-        passed = passed + 1
-        print("  PASS " .. label)
-    else
-        failed = failed + 1
-        print("  FAIL " .. label .. (detail and (": " .. detail) or ""))
+local function isTest(name)
+    return name:match("^test_.*%.lua$") ~= nil
+end
+
+if love then
+    function love.load()
+        local files = {}
+        for _, name in ipairs(love.filesystem.getDirectoryItems("")) do
+            if isTest(name) then
+                files[#files + 1] = name
+            end
+        end
+        table.sort(files)
+        Harness.run(files, love.filesystem.load)
+        love.event.quit(Harness.finish())
     end
-    return ok
-end
 
-local t = {}
-
-function t.ok(cond, label)
-    return report(cond and true or false, label or "ok")
-end
-
-function t.eq(actual, expected, label)
-    return report(actual == expected, label or "eq",
-                  "expected " .. tostring(expected) .. ", got " .. tostring(actual))
-end
-
-function t.near(a, b, eps, label)
-    eps = eps or 1e-6
-    local ok = type(a) == "number" and type(b) == "number" and math.abs(a - b) <= eps
-    return report(ok, label or "near",
-                  "expected " .. tostring(b) .. " within " .. eps .. ", got " .. tostring(a))
-end
-
-function t.raises(fn, label)
-    local ok, err = pcall(fn)
-    return report(not ok, label or "raises", "no error raised")
-end
-
-function t.skip(label)
-    skipped = skipped + 1
-    print("  SKIP " .. label)
-end
-
-local function runFile(name)
-    print(name)
-    local chunk, err = love.filesystem.load(name)
-    if not chunk then
-        report(false, "load", err)
-        return
+    function love.draw()
     end
-    local ok, result = pcall(chunk)
-    if not ok then
-        report(false, "load", tostring(result))
-        return
-    end
-    if type(result) ~= "function" then
-        report(false, "shape", "file must return a function(t)")
-        return
-    end
-    local ran, trace = xpcall(function() result(t) end, debug.traceback)
-    if not ran then
-        report(false, "error", tostring(trace))
-    end
-end
+else
+    -- The window of tests/conf.lua
+    app.setWindowSize(640, 480)
 
-function love.load()
     local files = {}
-    for _, name in ipairs(love.filesystem.getDirectoryItems("")) do
-        if name:match("^test_.*%.lua$") then
+    local listing = assert(io.popen('ls "' .. source .. '"'))
+    for name in listing:lines() do
+        if isTest(name) then
             files[#files + 1] = name
         end
     end
+    listing:close()
     table.sort(files)
-
-    -- Tests run at a fixed UI scale of 1 (window pixels equal virtual
-    -- units) unless they set another one
-    require("luif.core.screen"):setScale(1)
-
-    for _, name in ipairs(files) do
-        runFile(name)
-    end
-
-    print(string.format("%d passed, %d failed, %d skipped", passed, failed, skipped))
-    love.event.quit(failed == 0 and 0 or 1)
-end
-
-function love.draw()
+    Harness.run(files, function(name) return loadfile(source .. "/" .. name) end)
+    app.quit(Harness.finish())
 end
