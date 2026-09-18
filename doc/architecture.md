@@ -93,6 +93,7 @@ Required unless marked optional; optional functions belong to a capability.
 | | `beginBatch()`, `endBatch()` | optional, `batch`; brackets around one flush, not nested |
 | | `pointerPosition() -> x, y` | optional, `pointerPosition` |
 | | `isKeyDown(key)` | optional, `keyState` |
+| | `setTextInput(active, x, y, width, height)` | optional, `textInput`: a text field has the focus (its area in window pixels) or lost it; such hosts deliver `textInput` only in between |
 | | `inspect(node) -> snapshot`, `topLevel() -> nodes` | optional, `inspect`; for tests and tools |
 | input | `setInputSink(sink)` | the table the host feeds |
 
@@ -107,7 +108,7 @@ printable text only.
 Capabilities: `rotatedClip` (otherwise clips use the transformed box's
 bounds), `rotatedSlices`, `rotatedText`, `grayscale`, and the optional
 function groups `batch`, `textureFilter`, `pointerPosition`, `keyState`,
-`inspect`. `Interface.check(host)` reports missing required functions,
+`textInput`, `inspect`. `Interface.check(host)` reports missing required functions,
 claimed capabilities without their functions and unknown capability names.
 
 ## The hosts

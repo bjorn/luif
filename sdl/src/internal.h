@@ -243,6 +243,7 @@ struct SdlHost::Impl {
     Files files;
     std::string module;
     bool inspect;
+    bool manageTextInput;           // text input follows the focus of text fields
 
     Scene scene;
     Textures textures;

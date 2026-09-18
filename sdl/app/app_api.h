@@ -22,6 +22,7 @@
 //   app.windowSize()                width, height in pixels
 //   app.setBackgroundColor(color)   packed 0xAARRGGBB, like Luif's colours
 //   app.screenshot(path)            saves the next frame as a PNG
+//   app.textInputActive()           whether SDL text input is on for the window
 //   app.capture()                   draws a frame now and keeps its pixels
 //   app.pixel(x, y)                 the packed colour of a captured pixel
 //   app.setFrameTime(seconds)       a fixed dt for every update, to record

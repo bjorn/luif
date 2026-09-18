@@ -25,6 +25,7 @@ const char *const kindNames[] = { "none", "image", "slices", "text", "fill" }; /
 
 const char *const capabilityNames[] = {
     "rotatedSlices", "rotatedText", "grayscale", "textureFilter", "pointerPosition", "keyState",
+    "textInput",
 };
 
 const struct { const char *name; float Node::*member; } nodeNumbers[] = {
@@ -606,6 +607,27 @@ int setCursorName(lua_State *L)
     return 0;
 }
 
+// The area arrives in the renderer's coordinates; SDL wants the window's
+int setTextInput(lua_State *L)
+{
+    Impl &host = self(L);
+    if (!host.manageTextInput)
+        return 0;
+    if (lua_toboolean(L, 1)) {
+        float x = float(luaL_optnumber(L, 2, 0)), y = float(luaL_optnumber(L, 3, 0));
+        float right = x + float(luaL_optnumber(L, 4, 0)), bottom = y + float(luaL_optnumber(L, 5, 0));
+        SDL_RenderCoordinatesToWindow(host.renderer, x, y, &x, &y);
+        SDL_RenderCoordinatesToWindow(host.renderer, right, bottom, &right, &bottom);
+        const SDL_Rect area = { int(x), int(y), int(right - x), int(bottom - y) };
+        SDL_SetTextInputArea(host.window, &area, 0);
+        host.textInput = SDL_StartTextInput(host.window) || host.textInput;
+    } else if (host.textInput) {
+        SDL_StopTextInput(host.window);
+        host.textInput = false;
+    }
+    return 0;
+}
+
 int readFile(lua_State *L)
 {
     size_t size = 0;
@@ -811,7 +833,8 @@ const luaL_Reg functions[] = {
     { "wrapText", wrapText }, { "setTextureFilter", setTextureFilter },
     { "time", time }, { "screenSize", screenSize },
     { "getClipboard", getClipboard }, { "setClipboard", setClipboard },
-    { "setCursor", setCursorName }, { "readFile", readFile }, { "capabilities", capabilities },
+    { "setCursor", setCursorName }, { "setTextInput", setTextInput },
+    { "readFile", readFile }, { "capabilities", capabilities },
     { "pointerPosition", pointerPosition }, { "isKeyDown", isKeyDownName },
     { "setInputSink", setInputSink },
     { nullptr, nullptr },

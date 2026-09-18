@@ -73,6 +73,13 @@ return function(t)
         host.destroyNode(reused)
     end
 
+    -- Text input is on only while the framework says text is being edited
+    t.eq(app.textInputActive(), false, "sdl: text input is off without a focused text field")
+    host.setTextInput(true, 10, 20, 100, 24)
+    t.eq(app.textInputActive(), true, "sdl: setTextInput starts text input")
+    host.setTextInput(false)
+    t.eq(app.textInputActive(), false, "sdl: and stops it")
+
     --
     -- Drawing: nodes on an opaque backdrop, read back with app.pixel
     --

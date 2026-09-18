@@ -27,7 +27,8 @@
 --                       focus changes always do)
 --
 -- The callbacks make the LOVE host the pointer's input source (again, when
--- something else took it) and enable key repeat.
+-- something else took it), enable key repeat, and turn LOVE's text input off
+-- until a text field has the focus.
 --
 
 local LoveHost = require "luif.love.host"
@@ -69,6 +70,8 @@ local function attach()
         Host.set(Love.host)
     end
     love.keyboard.setKeyRepeat(true)
+    -- Off until a text field has the focus (host.setTextInput)
+    love.keyboard.setTextInput(false)
 end
 
 for _, name in ipairs(callbacks) do

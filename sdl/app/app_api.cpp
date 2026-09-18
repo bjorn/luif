@@ -61,6 +61,12 @@ int screenshot(lua_State *L)
     return 0;
 }
 
+int textInputActive(lua_State *L)
+{
+    lua_pushboolean(L, SDL_TextInputActive(self(L).window));
+    return 1;
+}
+
 // Tests read back what the host draws with these two
 int capture(lua_State *L)
 {
@@ -98,6 +104,7 @@ const luaL_Reg functions[] = {
     { "windowSize", windowSize },
     { "setBackgroundColor", setBackgroundColor },
     { "screenshot", screenshot },
+    { "textInputActive", textInputActive },
     { "capture", capture },
     { "pixel", pixel },
     { "setFrameTime", setFrameTime },

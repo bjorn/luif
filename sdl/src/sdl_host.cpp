@@ -63,16 +63,13 @@ SdlHost::Impl::Impl(lua_State *L, SDL_Window *window, SDL_Renderer *renderer,
     , files{ options.basePath ? options.basePath : "", options.openFile, options.userdata }
     , module(options.module ? options.module : "luif")
     , inspect(options.inspect)
+    , manageTextInput(options.textInput)
     , fonts(renderer, options, files)
 {
     textures.renderer = renderer;
     textures.files = &files;
     batch.renderer = renderer;
     registerLuaApi(*this);
-    // LOVE has text input enabled from the start, and so has this host
-    // unless the application looks after it; what it started, it stops
-    if (options.textInput && !SDL_TextInputActive(window))
-        textInput = SDL_StartTextInput(window);
 }
 
 // The Lua state has to be open still

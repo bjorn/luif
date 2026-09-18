@@ -135,9 +135,10 @@ Options and calls beyond the basics:
   returns a handle for Lua, used as `luif.Image { texture = handle }`. The
   application keeps ownership; `replaceTexture` points the handle at another
   texture, or at none before the texture is destroyed.
-* **Text input.** Like LOVE, the host starts SDL text input on the window and
-  stops it when it is destroyed. `textInput = false` leaves that to the
-  application.
+* **Text input.** The host starts SDL text input on the window while a text
+  field has the focus, with the field's area for on-screen keyboards and
+  input methods, and stops it afterwards, so game keys never go through an
+  input method. `textInput = false` leaves text input to the application.
 * **The pointer.** `pointerOverUi()` tells whether the pointer is over an
   item that takes mouse input, to suppress hover effects in the world.
 * **Sizes.** `screenSize`, input and drawing share the renderer's coordinates:
@@ -184,4 +185,6 @@ atlas (256 KB for the first page) and the textures themselves.
   once; an application should not create regions every frame.
 * A renderer device reset (`SDL_EVENT_RENDER_DEVICE_RESET`) loses the
   textures and the glyph atlas; the host does not rebuild them.
+* Text input has the area of the focused field but not the caret position
+  within it.
 * No per-node blend modes or masks, as on LOVE.

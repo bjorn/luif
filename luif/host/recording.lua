@@ -26,7 +26,7 @@
 -- Test helpers (not logged): host.log(), host.resetLog(), host.count(filter),
 -- host.logLines(filter), host.dump(node), host.feed(name, ...),
 -- host.setTime(ms), host.advance(ms), host.setScreenSize(w, h),
--- host.cursor(). A filter is an interface function name or group name
+-- host.cursor(), host.textInput(). A filter is an interface function name or group name
 -- ("structure", "properties", "content", "resources", "system", "input").
 -- inspect and topLevel are not logged either.
 --
@@ -164,6 +164,7 @@ function Recording.new(options)
     local screenW, screenH = options.screenWidth or 1280, options.screenHeight or 720
     local clipboard = ""
     local cursor = "arrow"
+    local textInput = false
     local pointerX, pointerY = 0, 0
     local keysDown = {}
     local textures = {}
@@ -172,7 +173,7 @@ function Recording.new(options)
     local caps = {
         rotatedClip = true, rotatedSlices = true, rotatedText = true, grayscale = true,
         batch = true, textureFilter = true, pointerPosition = true, keyState = true,
-        inspect = true,
+        textInput = true, inspect = true,
     }
     for name, value in pairs(options.capabilities or {}) do
         caps[name] = value and true or false
@@ -402,6 +403,10 @@ function Recording.new(options)
         cursor = Interface.cursorNames[name] and name or "arrow"
     end
 
+    function impl.setTextInput(active, x, y, width, height)
+        textInput = active and { x = x, y = y, width = width, height = height } or false
+    end
+
     function impl.readFile(path)
         local contents = files[path]
         if contents == nil and options.readFile then
@@ -575,6 +580,11 @@ function Recording.new(options)
 
     function host.cursor()
         return cursor
+    end
+
+    -- The area of the text being edited, or false
+    function host.textInput()
+        return textInput
     end
 
     return host

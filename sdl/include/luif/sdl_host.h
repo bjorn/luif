@@ -71,8 +71,9 @@ struct SdlHostOptions {
     // The Lua module that update() drives: require(module).update(dt)
     const char *module = "luif";
 
-    // Text input is started on the window, as LOVE does, and stopped again
-    // with the host. Turn this off when the application looks after it.
+    // The host starts text input on the window while a text field has the
+    // focus (with its area, for on-screen keyboards and input methods) and
+    // stops it afterwards. Turn this off when the application looks after it.
     bool textInput = true;
 
     // The inspect capability (host.inspect, host.topLevel) for tests and tools
