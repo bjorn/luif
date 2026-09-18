@@ -9,7 +9,7 @@ LOVE 11.5, and `example/` is a small application built on it.
 From the repository root:
 
 * `love example` starts the example (`example/` is the LOVE source directory;
-  its `main.lua` puts the repository root on `package.path`).
+  its `platform.lua` puts the repository root on `package.path`).
 * `love tests` runs every `tests/test_*.lua` and exits with status 0 when all
   checks pass.
 * `luajit tests/run_luajit.lua` (or `lua5.4`; core runs on Lua 5.1 to 5.4 and
@@ -22,6 +22,10 @@ From the repository root:
   `os`.
 
 ## The example
+
+The example also runs on the SDL3 host. `example/platform.lua` has the few
+things that differ (the window, quitting, screenshots, the update callback),
+so `main.lua` and `selftest.lua` do not use `love` themselves.
 
 Keys: Return enters the demo, Escape goes back to the title screen or, on the
 title screen, asks to quit, and F2 toggles between 1:1 pixels (the default)
