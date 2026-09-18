@@ -18,11 +18,12 @@ Files:
 | `luif/host/recording.lua` | recording host in plain Lua: full node state, a log of every call, test helpers |
 | `luif/love/host.lua` | LOVE host: `require("luif.love.host").new()`, `host.render()` from `love.draw`, `host.loveHandlers` |
 | `luif/love/transform.lua`, `texture.lua`, `font.lua` | transform and clip helpers, texture and font handles of the LOVE host |
+| `sdl/` | SDL3 host in C++: the `luif::sdl` library and the `luif-sdl` application (`doc/sdl.md`) |
 | `luif/init.lua`, `luif/love/init.lua` | the `luif` entry module and the LOVE callbacks |
 | `luif/core/host.lua` | the application's host, where core gets its platform services |
 | `luif/core/sync.lua` | one host node per attached item; the only core module that touches nodes; flushes changes once per frame |
 | `luif/core/textlayout.lua` | label text: colour runs, abbreviation, obfuscation, measuring through a host |
-| `tests/host_conformance.lua` | interface tests run against both hosts |
+| `tests/host_conformance.lua` | interface tests run against every host |
 
 `luif/host/` and `luif/core/` are platform neutral: they never use `love`, `io` or
 `os` (`tools/check-globals.sh` checks this) and load under plain LuaJIT.
@@ -123,6 +124,15 @@ capability except `batch`. `host.loveHandlers` translates the love input
 callbacks into feed calls and returns what the sink returns, and
 `host.releaseLostButtons()` synthesizes lost releases.
 
+SDL host (`sdl/`, see `doc/sdl.md`): the scene lives in C++. Nodes are structs
+in a pooled vector and handles are numbers; images, slices and fills are
+quads batched per texture through `SDL_RenderGeometry`, and text is laid out
+by the host from a shared glyph atlas. Clips use the clip rectangle, so it
+reports every capability except `rotatedClip` and `batch` (`inspect` only
+when asked for). The application feeds SDL events to `handleEvent`, which
+tells whether the UI handled them. Constructing the host puts the host table
+in `package.loaded["luif.sdl"]`, where `luif/init.lua` finds it.
+
 Recording host (`luif/host/recording.lua`): `Recording.new(options)`. Stores the
 same node state, logs every interface call except `inspect` and `topLevel`,
 and reports every capability unless `options.capabilities` turns some off.
@@ -137,10 +147,12 @@ greedy at spaces. Helpers: `log()`, `resetLog()`, `count(filter)`,
 With `pngSizes`, texture sizes come from the header of a PNG file that
 `readFile` returns, so tests can use real images without LOVE.
 
-Tests: `tests/test_host_love.lua` and `tests/test_host_recording.lua` run the
-conformance tests; the LOVE file also captures drawing calls. The whole suite
-runs without LOVE too: `luajit tests/run_luajit.lua` makes a recording host
-core's host and reports LOVE only tests as skips.
+Tests: `tests/test_host_love.lua`, `tests/test_host_sdl.lua` and
+`tests/test_host_recording.lua` run the conformance tests; the LOVE file also
+captures drawing calls and the SDL file reads pixels of rendered frames. The
+whole suite runs on each host (`love tests`, `luif-sdl --inspect tests`) and
+without one: `luajit tests/run_luajit.lua` makes a recording host core's host.
+Tests of another platform report skips.
 
 # The framework on the host
 

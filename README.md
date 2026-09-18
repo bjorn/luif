@@ -3,7 +3,8 @@
 Luif is a retained UI framework in plain Lua: a tree of items with layouts,
 skins, states, transitions and animations. It draws through a small retained
 host interface, so a host renders frames on its own and Lua only runs when
-something changes. A host for LOVE 11.5 is included.
+something changes. Hosts for LOVE 11.5 and for SDL3 (a C++ library for
+embedding in games) are included.
 
 [![The demo screen of the example](doc/screenshots/demo.png)](doc/screenshots/demo.webm)
 
@@ -49,6 +50,19 @@ when the UI handled the input.
 `example/` is a larger application with screens, dialogs, skins and
 animations. Run it from the repository root with `love example`.
 
+## Getting started with SDL3
+
+`sdl/` builds a static library that draws Luif with an `SDL_Renderer`, for
+games that own their window, loop and Lua state, and `luif-sdl`, which runs a
+directory like `love` does:
+
+```sh
+cmake -S sdl -B build && cmake --build build
+build/luif-sdl example
+```
+
+See [`doc/sdl.md`](doc/sdl.md) for embedding it.
+
 ## Repository
 
 | directory | contents |
@@ -56,8 +70,9 @@ animations. Run it from the repository root with `love example`.
 | `luif/core/` | the framework, portable Lua without LOVE or other platform dependencies |
 | `luif/host/` | the retained host interface and a recording host for tests |
 | `luif/love/` | the LOVE host and the glue that runs an application on LOVE |
+| `sdl/` | the SDL3 host: a C++ library, and the `luif-sdl` application |
 | `example/` | the example application |
-| `tests/` | tests for LOVE (`love tests`) and plain LuaJIT (`luajit tests/run_luajit.lua`) |
+| `tests/` | tests for LOVE (`love tests`), SDL (`luif-sdl --inspect tests`) and plain Lua (`luajit tests/run_luajit.lua`) |
 | `tools/` | static checks (`tools/check-globals.sh`) |
 | `doc/` | documentation |
 
@@ -65,6 +80,8 @@ animations. Run it from the repository root with `love example`.
 
 * [`doc/love.md`](doc/love.md): running the example and the tests,
   portability and known gaps.
+* [`doc/sdl.md`](doc/sdl.md): the SDL3 host: building, embedding it in a
+  game, and how it works.
 * [`doc/architecture.md`](doc/architecture.md): the host interface, items and
   nodes, skins and the event contract.
 
@@ -75,6 +92,9 @@ The framework is available under the MIT license, see [`LICENSE`](LICENSE).
 `luif/core/beziereasing.lua` is based on
 [bezier-easing](https://github.com/gre/bezier-easing) by Gaëtan Renaudeau,
 also under the MIT license.
+
+`sdl/app/font/Vera.ttf` is Bitstream Vera Sans, under the licence in
+`sdl/app/font/COPYRIGHT.TXT`.
 
 The artwork in `example/images` comes from the
 [Source of Tales](https://gitlab.com/tales/tales-client) client and is

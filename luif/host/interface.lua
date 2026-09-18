@@ -7,7 +7,8 @@
 --
 -- Hosts in this repository:
 --   luif/love/host.lua     the LOVE host (renders with love.graphics)
---   host/recording.lua   plain Lua; stores node state and logs every call
+--   sdl/                   the SDL3 host, in C++ (renders with an SDL_Renderer)
+--   host/recording.lua     plain Lua; stores node state and logs every call
 --
 -- A host is a table of plain functions (host.createNode(), not methods).
 -- An application gives core its host once with luif.setHost(host);
