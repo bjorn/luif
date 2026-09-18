@@ -26,7 +26,7 @@
 -- Test helpers (not logged): host.log(), host.resetLog(), host.count(filter),
 -- host.logLines(filter), host.dump(node), host.feed(name, ...),
 -- host.setTime(ms), host.advance(ms), host.setScreenSize(w, h),
--- host.cursor(). A filter is an interface function name or group name
+-- host.cursor(), host.textInput(). A filter is an interface function name or group name
 -- ("structure", "properties", "content", "resources", "system", "input").
 -- inspect and topLevel are not logged either.
 --
@@ -69,7 +69,12 @@ local function num(value)
     return format("%.10g", value)
 end
 
+-- Textures and fonts of another host (core's TexDb and FontDb use the
+-- application's) are opaque
 local function textureName(tex)
+    if type(tex) ~= "table" then
+        return tostring(tex)
+    end
     if tex.region then
         return format("%s@%s,%s+%sx%s", tex.name, num(tex.x), num(tex.y),
                       num(tex.width), num(tex.height))
@@ -109,9 +114,10 @@ local function describeContent(content)
                       num(content.bottom), content.tint, content.grayscale and " grayscale" or "")
     elseif kind == "text" then
         local runs = type(content.text) == "table" and " runs" or ""
-        return format("text=%q%s font=%s:%s color=%08X align=%s%s",
-                      Interface.plainText(content.text), runs, content.font.name,
-                      num(content.font.size), content.color, content.align,
+        local font = content.font
+        font = type(font) == "table" and font.name .. ":" .. num(font.size) or tostring(font)
+        return format("text=%q%s font=%s color=%08X align=%s%s",
+                      Interface.plainText(content.text), runs, font, content.color, content.align,
                       content.wrap and " wrap" or "")
     end
     local fill = content.color and format("fill=%08X", content.color) or "fill=none"
@@ -158,6 +164,7 @@ function Recording.new(options)
     local screenW, screenH = options.screenWidth or 1280, options.screenHeight or 720
     local clipboard = ""
     local cursor = "arrow"
+    local textInput = false
     local pointerX, pointerY = 0, 0
     local keysDown = {}
     local textures = {}
@@ -166,7 +173,7 @@ function Recording.new(options)
     local caps = {
         rotatedClip = true, rotatedSlices = true, rotatedText = true, grayscale = true,
         batch = true, textureFilter = true, pointerPosition = true, keyState = true,
-        inspect = true,
+        textInput = true, inspect = true,
     }
     for name, value in pairs(options.capabilities or {}) do
         caps[name] = value and true or false
@@ -369,7 +376,7 @@ function Recording.new(options)
         return widest, lines
     end
 
-    function impl.setTextureFilter(min, mag)
+    function impl.setTextureFilter(min, mag, texture)
     end
 
     --
@@ -394,6 +401,10 @@ function Recording.new(options)
 
     function impl.setCursor(name)
         cursor = Interface.cursorNames[name] and name or "arrow"
+    end
+
+    function impl.setTextInput(active, x, y, width, height)
+        textInput = active and { x = x, y = y, width = width, height = height } or false
     end
 
     function impl.readFile(path)
@@ -569,6 +580,11 @@ function Recording.new(options)
 
     function host.cursor()
         return cursor
+    end
+
+    -- The area of the text being edited, or false
+    function host.textInput()
+        return textInput
     end
 
     return host

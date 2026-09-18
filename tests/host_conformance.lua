@@ -46,9 +46,10 @@ return function(t, host, label, fixtures)
         names[n] = name
         return n
     end
+    -- Nodes made elsewhere (a host shared with other tests) are left out
     local function order(list)
         local parts = {}
-        for i = 1, #list do parts[i] = names[list[i]] or "?" end
+        for i = 1, #list do parts[#parts + 1] = names[list[i]] end
         return table.concat(parts, " ")
     end
     local function childOrder(n)

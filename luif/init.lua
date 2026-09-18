@@ -11,7 +11,9 @@
 --                       created on first use; add the UI to it
 --   luif.setHost(host)  the host that draws the UI and feeds it input
 --                       (luif/host/interface.lua); under LOVE the LOVE host
---                       is set up when luif is required
+--                       is set up when luif is required, and under the SDL
+--                       host (sdl/) the host table found in
+--                       package.loaded["luif.sdl"]
 --   luif.update(dt)     timers, effects, layout and the node flush, with dt
 --                       in seconds
 --
@@ -76,6 +78,12 @@ if love and love.graphics then
     for _, key in ipairs(Love.functions) do
         luif[key] = Love[key]
     end
+end
+
+-- The SDL host puts its host table there before the application's Lua runs
+local sdlHost = package.loaded["luif.sdl"]
+if sdlHost and not Host.current() then
+    luif.setHost(sdlHost)
 end
 
 if prefix ~= "" then

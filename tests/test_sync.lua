@@ -536,7 +536,7 @@ return function(t)
         -- DefaultScrollAreaSkin
         local rows = {}
         for i = 1, 3 do rows[i] = core.Item { width = 50, height = 20 } end
-        local scroll = core.ScrollArea { width = 120, height = 100, content = core.Column { unpack(rows) } }
+        local scroll = core.ScrollArea { width = 120, height = 100, content = core.Column { (unpack or table.unpack)(rows) } }
         build("ScrollArea", scroll, root)
         local skin = scroll.skin
         t.ok(childNodes(skin, { scroll.contentArea, scroll.trackbar, scroll.upButton, scroll.downButton }),
@@ -555,6 +555,20 @@ return function(t)
         t.ok(s.content.kind == "fill" and s.content.color == 0xFF303030 and s.content.borderColor == 0xFF808080
              and s.content.borderWidth == 1, "LineEdit: the bordered frame is one fill node")
         t.eq(kinds(lineEdit.textInput), "text fill", "LineEdit: label text and caret fill")
+
+        -- Text input follows the focus of a text field
+        t.eq(host.textInput(), false, "LineEdit: no text input before it has the focus")
+        lineEdit.textInput:setFocus()
+        local area = host.textInput()
+        local fieldX, fieldY = lineEdit.textInput:absolutePos()
+        t.ok(area and area.x == fieldX and area.y == fieldY and area.width == lineEdit.textInput.width,
+             "LineEdit: the focused field starts text input with its area")
+        lineEdit.textInput:setReadonly(true)
+        t.eq(host.textInput(), false, "LineEdit: a read only field needs no text input")
+        lineEdit.textInput:setReadonly(false)
+        t.ok(host.textInput(), "LineEdit: and gets it back when it can be edited")
+        lineEdit.textInput:setFocus(false)
+        t.eq(host.textInput(), false, "LineEdit: losing the focus stops text input")
 
         -- DefaultLabelToolTipSkin (and DefaultToolTipSkin)
         local tipped = core.Item { width = 20, height = 20, toolTip = "tip" }

@@ -448,6 +448,14 @@ function Host.new()
     end
 
     -- Through love.filesystem, with io as a fallback for other paths.
+    function host.setTextInput(active, x, y, width, height)
+        if active and x then
+            love.keyboard.setTextInput(true, x, y, width, height)
+        else
+            love.keyboard.setTextInput(active and true or false)
+        end
+    end
+
     function host.readFile(path)
         if love.filesystem.getInfo(path, "file") then
             local contents, err = love.filesystem.read(path)
@@ -465,7 +473,8 @@ function Host.new()
 
     local caps = {
         rotatedClip = true, rotatedSlices = true, rotatedText = true, grayscale = true,
-        textureFilter = true, pointerPosition = true, keyState = true, inspect = true,
+        textureFilter = true, pointerPosition = true, keyState = true, textInput = true,
+        inspect = true,
     }
 
     function host.capabilities()

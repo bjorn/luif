@@ -36,12 +36,12 @@ function TexDb.imageDirectories()
     return directories
 end
 
--- Sets the filter ("nearest" or "linear") of all loaded and generated images
--- (on hosts with the textureFilter capability)
-function TexDb.setFilter(min, mag)
+-- Sets the filter ("nearest" or "linear") of all loaded and generated images,
+-- or of one texture when given (on hosts with the textureFilter capability)
+function TexDb.setFilter(min, mag, texture)
     local host = Host.get()
     if host.setTextureFilter then
-        host.setTextureFilter(min, mag or min)
+        host.setTextureFilter(min, mag or min, texture)
     end
 end
 

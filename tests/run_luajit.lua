@@ -3,7 +3,7 @@
 --
 --   luajit tests/run_luajit.lua [test_file.lua ...]
 --
--- Test files live in tests/ and use the same reporting API as tests/main.lua
+-- Test files live in tests/ and report through the API of tests/harness.lua
 -- (t.ok, t.eq, t.near, t.raises, t.skip). Without arguments every
 -- tests/test_*.lua runs in sorted order. Core's host (core/host.lua) is a
 -- recording host (host/recording.lua) that reads files from disk, relative
@@ -68,70 +68,6 @@ local host = Recording.new {
 }
 require("luif.core.host").set(host)
 
-local passed, failed, skipped = 0, 0, 0
-
-local function report(ok, label, detail)
-    if ok then
-        passed = passed + 1
-        print("  PASS " .. label)
-    else
-        failed = failed + 1
-        print("  FAIL " .. label .. (detail and (": " .. detail) or ""))
-    end
-    return ok
-end
-
-local t = {}
-
-function t.ok(cond, label)
-    return report(cond and true or false, label or "ok")
-end
-
-function t.eq(actual, expected, label)
-    return report(actual == expected, label or "eq",
-                  "expected " .. tostring(expected) .. ", got " .. tostring(actual))
-end
-
-function t.near(a, b, eps, label)
-    eps = eps or 1e-6
-    local ok = type(a) == "number" and type(b) == "number" and math.abs(a - b) <= eps
-    return report(ok, label or "near",
-                  "expected " .. tostring(b) .. " within " .. eps .. ", got " .. tostring(a))
-end
-
-function t.raises(fn, label)
-    local ok = pcall(fn)
-    return report(not ok, label or "raises", "no error raised")
-end
-
-function t.skip(label)
-    skipped = skipped + 1
-    print("  SKIP " .. label)
-end
-
--- Tests run at a fixed UI scale of 1 (window pixels equal virtual units)
--- unless they set another one
-require("luif.core.screen"):setScale(1)
-
-for _, name in ipairs(files) do
-    print(name)
-    local chunk, err = loadfile(dir .. "/" .. name)
-    if not chunk then
-        report(false, "load", err)
-    else
-        local ok, result = pcall(chunk)
-        if not ok then
-            report(false, "load", tostring(result))
-        elseif type(result) ~= "function" then
-            report(false, "shape", "file must return a function(t)")
-        else
-            local ran, trace = xpcall(function() result(t) end, debug.traceback)
-            if not ran then
-                report(false, "error", tostring(trace))
-            end
-        end
-    end
-end
-
-print(string.format("%d passed, %d failed, %d skipped", passed, failed, skipped))
-os.exit(failed == 0 and 0 or 1)
+local Harness = require "tests.harness"
+Harness.run(files, function(name) return loadfile(dir .. "/" .. name) end)
+os.exit(Harness.finish())

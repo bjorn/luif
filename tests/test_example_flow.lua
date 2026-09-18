@@ -114,7 +114,7 @@ return function(t)
     local r3 = spinner.rotation
     t.ok(r3 > 0 and r3 < 360, "rotation advances (" .. r3 .. ")")
     local spinnerNode = Sync.host(spinner).inspect(Sync.node(spinner))
-    t.near(spinnerNode.rotation, math.rad(r3), 1e-9, "node rotation in radians")
+    t.near(spinnerNode.rotation, math.rad(r3), 1e-6, "node rotation in radians")
     -- frame 7 lands on 360 and restarts the loop; frame 8 is 16 ms into loop 2
     step(5)
     t.ok(spinner.rotation < r3, "rotation wraps after first loop (" .. spinner.rotation .. ")")

@@ -1,5 +1,6 @@
 --
--- Example application: Luif running on LOVE.
+-- Example application: Luif running on LOVE (love example) or on SDL3
+-- (luif-sdl example). platform.lua has what differs between the two.
 --
 -- A title screen and a demo screen are two pages of one item whose state
 -- ("title" or "demo") drives a full screen Transition. Dialogs are modal and
@@ -16,7 +17,8 @@
 --                           toggles the scale like F2 (scale 0.52),
 --                           "tooltip" hovers Start so its tooltip shows
 --   LUIF_SCREENSHOT=<name>  writes <name>.png to the LOVE save directory
---                           after 1.5 seconds and quits
+--                           (on SDL: the current directory) after 1.5
+--                           seconds and quits
 --   LUIF_SMOKE=1            quits after two seconds with exit code 0
 --   LUIF_SELFTEST=1         clicks through both screens and the dialogs
 --                           with injected input, exits 0 when all checks pass
@@ -24,18 +26,17 @@
 --                           after one loop to settle, with a fixed frame
 --                           time, writes the frames to
 --                           record/frame0001.png and so on in the LOVE save
---                           directory and quits; LUIF_RECORD_FRAMES overrides
---                           the number of frames (tools/record-demo.sh)
+--                           directory (on SDL: the current directory) and
+--                           quits; LUIF_RECORD_FRAMES overrides the number
+--                           of frames (tools/record-demo.sh)
 --
 
--- The framework lives one directory up from this LOVE source directory.
--- LOVE keeps Lua's standard package searchers, so an absolute package.path
--- entry makes the framework requirable from here.
-local root = love.filesystem.getSource() .. "/.."
-package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
+-- Comes first: it puts the framework, one directory up, on package.path
+local platform = require "platform"
 
--- Required under LOVE, Luif sets up its LOVE host
-local luif = require "luif"
+-- Luif finds its host itself: the LOVE host under LOVE, and the SDL host
+-- that the runner created
+require "luif"
 local core = require "luif.core"
 local flag = os.getenv("LUIF_DEBUG")
 core.Debug.setEnabled(flag ~= nil and flag ~= "" and flag ~= "0")
@@ -56,7 +57,7 @@ local TopLayer          = core.TopLayer
 local Pointer           = core.Pointer
 local Sync              = core.Sync
 
--- Textures are loaded through love.filesystem, relative to this directory
+-- Textures are loaded by the host, relative to this directory
 TexDb.setImageDirectories { "images" }
 TexDb.setSlices("frame_with_title", 36, 30, 36, 15)
 
@@ -66,7 +67,7 @@ local Dialog = require "dialog"
 -- Pixel art that is scaled up keeps its hard edges
 local function pixelated(name)
     local texture = TexDb[name]
-    texture.image:setFilter("nearest", "nearest")
+    TexDb.setFilter("nearest", "nearest", texture)
     return texture
 end
 pixelated("login_background")
@@ -84,7 +85,7 @@ local COLOR = {
     accent      = 0xFFFFD890,
 }
 
-love.graphics.setBackgroundColor(0.16, 0.17, 0.21)
+platform.setBackgroundColor(COLOR.page)
 
 local function text(value, x, y, color, font, width, align)
     return core.Label {
@@ -350,7 +351,7 @@ local scrollPanel = panel("Clipping and scrolling", 648, 408, 600, 288, {
     core.ScrollArea {
         skinClass = skins.ScrollAreaSkin,
         x = 20, y = 52, width = 280, height = 216,
-        content = core.Column { gap = 2, unpack(rows) },
+        content = core.Column { gap = 2, (unpack or table.unpack)(rows) },
     },
     rowStatus,
     text("The list is clipped by the node clip flag, and rows scrolled out of "
@@ -368,15 +369,15 @@ local function askQuit()
         title = "Quit",
         message = "Do you want to leave the example?",
         confirmText = "Quit", cancelText = "Stay",
-        confirmed = function() love.event.quit() end,
+        confirmed = function() platform.quit() end,
     }
 end
 
 local function showAbout()
     dialog:open {
         title = "About",
-        message = "Luif, a Lua UI framework, running on LOVE 11.5. The artwork "
-               .. "comes from the Source of Tales client.",
+        message = "Luif, a Lua UI framework, running on " .. platform.description
+               .. ". The artwork comes from the Source of Tales client.",
         confirmText = "OK",
     }
 end
@@ -554,7 +555,7 @@ for name in (os.getenv("LUIF_SCENE") or ""):gmatch("[%w_]+") do
 end
 
 if scene.scaled then
-    love.window.updateMode(1000, 600)
+    platform.setWindowSize(1000, 600)
     toggleUiScale()
 end
 if scene.demo then
@@ -590,7 +591,7 @@ local transitionStarted = false
 local captureRequested = false
 local quitRequested = false
 
-function love.update(dt)
+platform.onUpdate(function(dt)
     elapsed = elapsed + dt
 
     if selftest then
@@ -616,46 +617,34 @@ function love.update(dt)
         if not name:match("%.png$") then
             name = name .. ".png"
         end
-        love.graphics.captureScreenshot(function(imageData)
-            imageData:encode("png", name)
-            print("screenshot written to " .. love.filesystem.getSaveDirectory() .. "/" .. name)
+        platform.screenshot(name, function()
             quitRequested = true
         end)
     end
 
     if quitRequested or (smoke and elapsed >= 2) then
-        love.event.quit(0)
+        platform.quit(0)
     end
-end
-
-luif.hook()
+end)
 
 local record = tonumber(os.getenv("LUIF_RECORD") or "")
 if record then
     local loop = math.floor(LOOP_MS * record / 1000 + 0.5)
     local frames = tonumber(os.getenv("LUIF_RECORD_FRAMES") or "") or loop
     local frame = -loop     -- one loop lets startup transitions settle
-    love.filesystem.createDirectory("record")
-    local hookedUpdate, hookedDraw = love.update, love.draw
 
     -- A fixed frame time, so the frames show exact points in the loop: frame
     -- n is n / record seconds into it, and the last one closes the loop
-    function love.update()
-        hookedUpdate(1 / record)
-    end
+    platform.setFrameTime(1 / record)
 
-    function love.draw()
-        hookedDraw()
+    platform.onUpdate(function()
         frame = frame + 1
         if frame > frames then
-            love.event.quit(0)
-            return
-        elseif frame < 1 then
-            return
+            platform.quit(0)
+        elseif frame >= 1 then
+            platform.screenshot(("record/frame%04d.png"):format(frame))
         end
-        local name = ("record/frame%04d.png"):format(frame)
-        love.graphics.captureScreenshot(function(imageData)
-            imageData:encode("png", name)
-        end)
-    end
+    end)
 end
+
+platform.run()

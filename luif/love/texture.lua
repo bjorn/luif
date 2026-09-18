@@ -100,8 +100,13 @@ function Texture.size(tex)
     return tex.width, tex.height
 end
 
--- Filter for every loaded and generated image; "nearest" for pixel art.
-function Texture.setFilter(min, mag)
+-- Filter for every loaded and generated image, or for the image of one
+-- texture; "nearest" for pixel art.
+function Texture.setFilter(min, mag, tex)
+    if tex then
+        tex.image:setFilter(min, mag or min)
+        return
+    end
     filterMin, filterMag = min, mag or min
     for i = 1, #owned do
         owned[i].image:setFilter(filterMin, filterMag)

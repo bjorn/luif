@@ -77,10 +77,13 @@ return function(t)
     local FontDb = require "luif.core.fontdb"
     t.ok(FontDb.Text ~= nil, "default font built")
     t.eq(FontDb.Text, FontDb.Text, "font cached")
-    t.eq(FontDb.TextShadowed.shadow and FontDb.TextShadowed.shadow[3], 0xFF000000, "shadow spec")
+    t.eq(FontDb.spec("TextShadowed").shadow[3], 0xFF000000, "shadow spec")
+    t.ok(FontDb.TextShadowed ~= FontDb.Text, "a shadowed font is another font")
+    -- Font handles are opaque, so sizes are compared through the host
+    local lineHeight = require("luif.core.host").get().lineHeight
     FontDb.configure { Custom = { size = 21 } }
-    t.eq(FontDb.Custom.size, 21, "configured font")
-    t.eq(FontDb.Unknown.size, FontDb.Text.size, "unknown font falls back to Text")
+    t.ok(FontDb.Custom ~= FontDb.Text, "configured font")
+    t.eq(lineHeight(FontDb.Unknown), lineHeight(FontDb.Text), "unknown font falls back to Text")
 
     -- Textures: generated ones and files from the example directory
     local TexDb = require "luif.core.texdb"

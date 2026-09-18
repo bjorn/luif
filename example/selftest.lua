@@ -1,12 +1,13 @@
 --
 -- Self-test for the example, enabled with LUIF_SELFTEST=1. Clicks through
 -- both screens and the dialogs by feeding input to core's pointer (the sink
--- the LOVE host feeds), prints one line per check and quits with exit code
--- 0 when every check passed, 1 otherwise. With LUIF_SCENE=scaled the same
--- clicks run in a 1000x600 window at the adaptive UI scale.
+-- the host feeds), prints one line per check and quits with exit code 0 when
+-- every check passed, 1 otherwise. With LUIF_SCENE=scaled the same clicks run
+-- in a 1000x600 window at the adaptive UI scale.
 --
 
 local core = require "luif.core"
+local platform = require "platform"
 
 local Pointer = core.Pointer
 local Screen = core.Screen
@@ -76,7 +77,7 @@ return function(ctx)
         check(app.state == "title", "starts on the title screen")
 
         if ctx.scaled then
-            local width, height = love.graphics.getDimensions()
+            local width, height = platform.windowSize()
             check(width == 1000 and height == 600 and Screen.adaptive,
                   "the window is 1000x600 with the adaptive scale")
             check(math.abs(Screen.width - 1920) < 1e-6,
@@ -176,7 +177,7 @@ return function(ctx)
         if coroutine.status(script) == "dead" then
             finished = true
             print(failures == 0 and "selftest passed" or ("selftest failed: " .. failures .. " checks"))
-            love.event.quit(failures == 0 and 0 or 1)
+            platform.quit(failures == 0 and 0 or 1)
         end
     end
 end

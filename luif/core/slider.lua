@@ -234,7 +234,7 @@ function Slider:updateValue(x)
     local value = self.minimum + ratio * (self.maximum - self.minimum)
 
     -- Round to shown decimal
-    local precisionFactor = math.pow(10, tonumber(self.decimals) or 0)
+    local precisionFactor = 10 ^ (tonumber(self.decimals) or 0)
     value = math.floor(value * precisionFactor + 0.5) / precisionFactor
 
     self:setValue(value, true)
@@ -260,12 +260,12 @@ function Slider:tryGetValueFromLabel()
 end
 
 function Slider:increment()
-    local amount = 1 / math.pow(10, tonumber(self.decimals) or 0)
+    local amount = 1 / 10 ^ (tonumber(self.decimals) or 0)
     self:setValue(self.value + amount, true)
 end
 
 function Slider:decrement()
-    local amount = 1 / math.pow(10, tonumber(self.decimals) or 0)
+    local amount = 1 / 10 ^ (tonumber(self.decimals) or 0)
     self:setValue(self.value - amount, true)
 end
 

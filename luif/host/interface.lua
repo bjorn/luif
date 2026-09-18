@@ -7,7 +7,8 @@
 --
 -- Hosts in this repository:
 --   luif/love/host.lua     the LOVE host (renders with love.graphics)
---   host/recording.lua   plain Lua; stores node state and logs every call
+--   sdl/                   the SDL3 host, in C++ (renders with an SDL_Renderer)
+--   host/recording.lua     plain Lua; stores node state and logs every call
 --
 -- A host is a table of plain functions (host.createNode(), not methods).
 -- An application gives core its host once with luif.setHost(host);
@@ -18,6 +19,7 @@
 --
 --   Handles     nodes, textures and fonts are opaque host values with stable
 --               identity; the framework may use them as table keys.
+--   Numbers     a host may keep node properties in single precision.
 --   Units       positions and sizes are in the parent node's units. Top level
 --               nodes are in window pixels, and so are input positions and
 --               screenSize(). A UI scale is a scale on a root node
@@ -162,9 +164,10 @@ Interface.groups = {
             { name = "wrapText", required = true, params = "(font, text, width)",
               returns = "widest, lines",
               doc = "Word wraps text at width; returns the widest line's width and the lines." },
-            { name = "setTextureFilter", required = false, params = "(min, mag)",
+            { name = "setTextureFilter", required = false, params = "(min, mag, texture)",
               capability = "textureFilter",
-              doc = "\"linear\" or \"nearest\" for every texture." },
+              doc = "\"linear\" or \"nearest\" for every texture, or for one texture (and "
+                 .. "the regions that share its image) when given." },
         },
     },
     {
@@ -180,6 +183,12 @@ Interface.groups = {
             { name = "setClipboard", required = true, params = "(text)" },
             { name = "setCursor", required = true, params = "(name)",
               doc = "One of Interface.cursors; nil or an unknown name selects \"arrow\"." },
+            { name = "setTextInput", required = false, params = "(active, x, y, width, height)",
+              capability = "textInput",
+              doc = "Text is being edited, in the given area in window pixels (where an "
+                 .. "on-screen keyboard or an input method window should not go), or no "
+                 .. "longer. A host with this capability delivers textInput only while "
+                 .. "active; other hosts deliver it at all times." },
             { name = "readFile", required = true, params = "(path)",
               returns = "contents or nil, message" },
             { name = "capabilities", required = true, params = "()", returns = "table",
@@ -250,6 +259,7 @@ Interface.capabilityList = {
     { name = "textureFilter", functions = { "setTextureFilter" } },
     { name = "pointerPosition", functions = { "pointerPosition" } },
     { name = "keyState", functions = { "isKeyDown" } },
+    { name = "textInput", functions = { "setTextInput" } },
     { name = "inspect", functions = { "inspect", "topLevel" } },
 }
 

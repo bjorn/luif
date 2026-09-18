@@ -231,18 +231,38 @@ function TextInput:setNumeric(numeric)
     self.numeric = numeric and true or false
 end
 
+-- Tells the host that text is being edited here, or no longer: it starts
+-- and stops text input (an on-screen keyboard, an input method) with that
+local function setTextInput(self, active)
+    local host = Sync.host(self)
+    if not host.setTextInput then
+        return
+    end
+    if active then
+        local x, y = core.Pointer.toWindow(self:absolutePos())
+        host.setTextInput(true, x, y, core.Pointer.toWindow(self:size()))
+    else
+        host.setTextInput(false)
+    end
+end
+
 function TextInput:setReadonly(readonly)
     self.readonly = readonly and true or false
+    if self.state == "focused" then
+        setTextInput(self, not self.readonly)
+    end
     self:updateCaret()
 end
 
 function TextInput:focusGain()
     self:setState("focused")
     self:setCaretVisible(true)
+    setTextInput(self, not self.readonly)
     core.Item.focusGain(self)
 end
 
 function TextInput:focusLose()
+    setTextInput(self, false)
     self:setState("normal")
     if self._caretTimeout then
         Update:clearTimeout(self._caretTimeout)

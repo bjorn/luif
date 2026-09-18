@@ -46,7 +46,8 @@ return function(t)
 
     local px, py = Pointer.toWorld(child, 45, 12)
     local nx, ny = HostWorld.toWorld(Sync.host(child), Sync.node(child), 45, 12)
-    t.ok(math.abs(px - nx) < 1e-6 and math.abs(py - ny) < 1e-6,
+    -- A host may keep node properties in single precision
+    t.ok(math.abs(px - nx) < 1e-3 and math.abs(py - ny) < 1e-3,
          "the core transform of the child matches its node")
     t.eq((Pointer.pick(px, py)), child, "the point picks the transformed child")
     click(px, py)
