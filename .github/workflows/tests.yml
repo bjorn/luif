@@ -45,3 +45,36 @@ jobs:
 
       - name: Example self-test at the adaptive UI scale
         run: LUIF_SELFTEST=1 LUIF_SCENE=scaled xvfb-run -a -s "-screen 0 1280x720x24" love example
+
+  sdl:
+    name: SDL3 host (${{ matrix.lua }})
+    runs-on: ubuntu-24.04
+    container: fedora:latest
+    strategy:
+      matrix:
+        lua: [luajit, lua]
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_RENDER_DRIVER: software
+    steps:
+      - name: Install the toolchain, SDL3 and Lua
+        run: dnf install -y git gcc-c++ cmake ninja-build SDL3-devel SDL3_ttf-devel luajit-devel lua-devel
+
+      - uses: actions/checkout@v7
+
+      - name: Build
+        run: |
+          cmake -S sdl -B build -G Ninja -DLUIF_LUA=${{ matrix.lua }} -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
+          cmake --build build
+
+      - name: Tests on the SDL host
+        run: build/luif-sdl --inspect tests
+
+      - name: Embedding example
+        run: build/luif-embed .
+
+      - name: Example self-test
+        run: LUIF_SELFTEST=1 build/luif-sdl example
+
+      - name: Example self-test at the adaptive UI scale
+        run: LUIF_SELFTEST=1 LUIF_SCENE=scaled build/luif-sdl example
